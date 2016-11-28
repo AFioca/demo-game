@@ -23,7 +23,7 @@ function Laser(startingX, startingY) {
   };
 
   this.getTopBoundry = function() {
-    return (this.rectangle.y + this.startingY - (this.height / 2));
+    return (this.rectangle.y + this.startingY + (this.height / 2));
   };
 
   this.getCurrentX = function() {
