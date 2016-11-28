@@ -1,77 +1,67 @@
 var Laser = require('./Laser');
 
-// so for now, if you use an image you need the startingX and startingY args to be 0
-function SpaceShip(startingX, startingY, color, imagePath) {
+function SpaceShip(imagePath) {
 
-  this.triangle = new createjs.Shape();
-  this.imagePath = imagePath;
-  this.color = color;
-  this.startingX = startingX;
-  this.startingY = startingY;
-  this.posX = 0;
-  this.posY = 0;
+  // game attributes
+  this.health = 100;
 
-  this.radius = 50;
-  this.noOfPoints = 3;
-  this.pointSize = 0.5;
-  this.angle = -90;
-
-  this.draw = function() {
-    if (this.imagePath) {
-      this.triangle = new createjs.Bitmap(imagePath);
-      this.triangle.regX = 50;
-      this.triangle.regY = 50;
-      this.triangle.x = this.startingX;
-      this.triangle.y = this.startingY;
-    } else {
-      this.triangle = new createjs.Shape();
-      this.triangle.graphics.beginFill(this.color).drawPolyStar(this.startingX, this.startingY, this.radius, this.noOfPoints, this.pointSize, this.angle);
+  // visual attributes
+  this.spriteSheet = new createjs.SpriteSheet({
+    images: [imagePath],
+    frames: {width:100, height:100, regX: 50, regY: 50},
+    animations: {
+      default: {
+        frames: [0, 1],
+        speed: 0.1
+      },
+      damaged: {
+        frames: [2, 3],
+        speed: 0.1
+      }
     }
-  };
+  });
+  this.sprite = new createjs.Sprite(this.spriteSheet, "default");
+  this.radius = 50;
 
   this.getSelf = function() {
-    return this.triangle;
+    return this.sprite;
   };
 
   this.moveSpaces = function(x, y) {
-    this.posX = this.posX + x;
-    this.posY = this.posY + y;
-    this.triangle.x = this.triangle.x + x;
-    this.triangle.y = this.triangle.y + y;
+    this.sprite.x = this.sprite.x + x;
+    this.sprite.y = this.sprite.y + y;
   };
 
   this.getCurrentX = function() {
-    return (this.posX + this.startingX);
+    return this.sprite.x;
   };
 
   this.getCurrentY = function() {
-    return (this.posY + this.startingY);
+    return this.sprite.y;
   };
 
   this.getLeftBoundry = function() {
-    return (this.posX + this.startingX - this.radius);
+    return (this.sprite.x - this.radius);
   };
 
   this.getRightBoundry = function() {
-    return (this.posX + this.startingX + this.radius);
+    return (this.sprite.x + this.radius);
   };
 
   this.getTopBoundry = function() {
-    return (this.posY + this.startingY - this.radius);
+    return (this.sprite.y - this.radius);
   };
 
   this.getBottomBoundry = function() {
-    return (this.posY + this.startingY + this.radius);
+    return (this.sprite.y + this.radius);
   };
 
   this.moveToX = function (x) {
-    this.posX = x - this.startingX;
-    this.triangle.x = x - this.startingX;
+    this.sprite.x = x;
   };
 
   this.moveToY = function (y) {
-    this.posY = y - this.startingY;
-    this.triangle.y = y -this.startingY;
+    this.sprite.y = y;
   };
 
   this.fire = function() {
@@ -79,12 +69,21 @@ function SpaceShip(startingX, startingY, color, imagePath) {
     laser.draw();
     return laser;
   };
+
+  this.takeDamage = function(amount) {
+    this.health = this.health - amount;
+    if (this.health < 50) {
+      this.sprite.gotoAndPlay("damaged");
+    }
+  };
 }
 
 function SpaceShipFactory() {
-  this.create = function(startingX, startingY, color, image) {
-    return new SpaceShip(startingX, startingY, color, image);
-  }
+
+  this.create = function(image) {
+    return new SpaceShip(image);
+  };
+
 }
 
 module.exports = new SpaceShipFactory();

@@ -3,9 +3,9 @@ var StageManager = require('./managers/StageManager');
 
 function Game(canvasId) {
 
-  this.player1 = Spaceship.create(0, 0, "#0F0", "/demo-game/img/spaceship.png");
+  this.player1 = Spaceship.create("/demo-game/img/spaceship.png");
   this.isPaused = false;
-  this.stageManager = StageManager.create(canvasId, 2);
+  this.stageManager = StageManager.create(canvasId, 12);
 
   this.init = function() {
     this.stageManager.init(this.player1);

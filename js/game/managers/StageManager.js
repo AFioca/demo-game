@@ -6,20 +6,29 @@ function StageManager(canvasId, enemyShipCount) {
   this.height = this.stage.canvas.height;
   this.width = this.stage.canvas.width;
 
+  this.backgroundImage1 = new createjs.Bitmap("/demo-game/img/space-background.png");
+  this.backgroundImage2 = new createjs.Bitmap("/demo-game/img/space-background.png");
+
+
   this.enemyShipCount = enemyShipCount;
   this.projectiles = [];
   this.explosions = [];
   this.enemyShips = [];
 
   this.init = function(playerShip) {
-    playerShip.draw();
-    this.stage.addChild(playerShip.getSelf());
+    this.stage.addChild(this.backgroundImage1);
+    this.stage.addChild(this.backgroundImage2)
+    this.backgroundImage2.y = -this.height;
     this._createEnemyShips();
+    this.stage.addChild(playerShip.getSelf());
+    playerShip.moveToX(this.width/2);
+    playerShip.moveToY(this.height-100);
   };
 
   this.update = function(playerShip) {
+    this._moveBackground();
     this._movePlayerShip(playerShip);
-    this._moveEnemyShips();
+    this._updateEnemyShips();
     this._updateProjectiles();
     this._updateExplosions();
     this.stage.update();
@@ -36,15 +45,31 @@ function StageManager(canvasId, enemyShipCount) {
 
   this._createEnemyShips = function() {
     var startingX = 50;
-    var startingY = 50;
+    var startingY = 60;
     for (var i = 0; i < this.enemyShipCount; i++) {
-      var enemyShip = Spaceship.create(startingX, startingY, "#F00");
-      enemyShip.draw();
+      var enemyShip = Spaceship.create("/demo-game/img/enemy-spaceship.png");
       this.stage.addChild(enemyShip.getSelf());
+      enemyShip.moveToX(startingX);
+      enemyShip.moveToY(startingY);
       this.enemyShips.push(enemyShip);
-      startingX = startingX + 100;
-      startingY = startingY + 100;
+      startingX = startingX + 75;
+      if (startingY > 100) {
+        startingY = startingY - 110;
+      } else {
+        startingY = startingY + 110;
+      }
     }
+  };
+
+  this._moveBackground = function() {
+    if (this.backgroundImage1.y > this.height) {
+      this.backgroundImage1.y = -this.height;
+    }
+    if (this.backgroundImage2.y > this.height) {
+      this.backgroundImage2.y = -this.height;
+    }
+    this.backgroundImage1.y = this.backgroundImage1.y + 0.5;
+    this.backgroundImage2.y = this.backgroundImage2.y + 0.5;
   };
 
   this._movePlayerShip = function(playerShip) {
@@ -54,12 +79,33 @@ function StageManager(canvasId, enemyShipCount) {
     }
   };
 
-  this._moveEnemyShips = function() {
-    for (var i = 0; i < this.enemyShipCount; i++) {
-      if (this.enemyShips[i].getLeftBoundry() >= this.width) {
-        this.enemyShips[i].moveToX(0 - this.enemyShips[i].radius);
+  this._updateEnemyShips = function() {
+    this._removeDestroyedShips();
+    this._moveEnemyShips();
+  };
+
+  this._removeDestroyedShips = function() {
+    for (var i = 0; i < this.enemyShips.length; i++) {
+      if (this.enemyShips[i].health <= 0) {
+        this.stage.removeChild(this.enemyShips[i].getSelf());
+        this.enemyShips.splice(i, 1);
       }
-      this.enemyShips[i].moveSpaces(1, 0);
+    }
+  };
+
+  this._moveEnemyShips = function() {
+    for (var i = 0; i < this.enemyShips.length; i++) {
+      if (this.enemyShips[i].getCurrentY() < 100) {
+        if (this.enemyShips[i].getLeftBoundry() >= this.width) {
+          this.enemyShips[i].moveToX(0 - this.enemyShips[i].radius);
+        }
+        this.enemyShips[i].moveSpaces(1, 0);
+      } else {
+        if (this.enemyShips[i].getRightBoundry() <= 0) {
+          this.enemyShips[i].moveToX(this.width + this.enemyShips[i].radius);
+        }
+        this.enemyShips[i].moveSpaces(-1, 0);
+      }
     }
   };
 
@@ -86,8 +132,9 @@ function StageManager(canvasId, enemyShipCount) {
   };
 
   this._handleEnemyCollisions = function(projectile) {
-    for (var i = 0; i < this.enemyShipCount; i++) {
+    for (var i = 0; i < this.enemyShips.length; i++) {
       if(this._collidesWithEnemyShip(this.enemyShips[i], projectile)) {
+        this.enemyShips[i].takeDamage(projectile.damage);
         var explosion = projectile.explode();
         this.stage.addChild(explosion.getSelf());
         this.explosions.push(explosion);

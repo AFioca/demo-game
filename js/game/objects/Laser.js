@@ -2,6 +2,8 @@ var Explosion = require('./Explosion');
 
 function Laser(startingX, startingY) {
 
+  this.damage = 20;
+
   this.rectangle = new createjs.Shape();
   this.startingX = startingX;
   this.startingY = startingY;
@@ -11,7 +13,7 @@ function Laser(startingX, startingY) {
   this.isExpired = false;
 
   this.draw = function() {
-    this.rectangle.graphics.beginFill("black").drawRect(this.startingX, this.startingY, this.width, this.height);
+    this.rectangle.graphics.beginFill("yellow").drawRect(this.startingX, this.startingY, this.width, this.height);
   };
 
   this.getSelf = function() {
