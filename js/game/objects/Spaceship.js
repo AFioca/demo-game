@@ -1,8 +1,11 @@
 var Laser = require('./Laser');
 
-function SpaceShip(startingX, startingY, color) {
+// so for now, if you use an image you need the startingX and startingY args to be 0
+function SpaceShip(startingX, startingY, color, imagePath) {
 
   this.triangle = new createjs.Shape();
+  this.imagePath = imagePath;
+  this.color = color;
   this.startingX = startingX;
   this.startingY = startingY;
   this.posX = 0;
@@ -14,7 +17,16 @@ function SpaceShip(startingX, startingY, color) {
   this.angle = -90;
 
   this.draw = function() {
-    this.triangle.graphics.beginFill(color).drawPolyStar(this.startingX, this.startingY, this.radius, this.noOfPoints, this.pointSize, this.angle);
+    if (this.imagePath) {
+      this.triangle = new createjs.Bitmap(imagePath);
+      this.triangle.regX = 50;
+      this.triangle.regY = 50;
+      this.triangle.x = this.startingX;
+      this.triangle.y = this.startingY;
+    } else {
+      this.triangle = new createjs.Shape();
+      this.triangle.graphics.beginFill(this.color).drawPolyStar(this.startingX, this.startingY, this.radius, this.noOfPoints, this.pointSize, this.angle);
+    }
   };
 
   this.getSelf = function() {
@@ -63,15 +75,15 @@ function SpaceShip(startingX, startingY, color) {
   };
 
   this.fire = function() {
-    var laser = Laser.create(this.getCurrentX(), this.getCurrentY());
+    var laser = Laser.create(this.getCurrentX(), this.getCurrentY() - this.radius);
     laser.draw();
     return laser;
   };
 }
 
 function SpaceShipFactory() {
-  this.create = function(startingX, startingY, color) {
-    return new SpaceShip(startingX, startingY, color);
+  this.create = function(startingX, startingY, color, image) {
+    return new SpaceShip(startingX, startingY, color, image);
   }
 }
 

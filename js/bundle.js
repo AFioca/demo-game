@@ -54,14 +54,6 @@
 	};
 
 
-
-
-
-
-
-
-
-
 /***/ },
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
@@ -75,7 +67,8 @@
 	  this.height = this.stage.canvas.height;
 	  this.width = this.stage.canvas.width;
 
-	  this.spaceship1 = Spaceship.create(200, 200, "#0F0");
+	  // this.spaceship1 = Spaceship.create(200, 200, "#0F0");
+	  this.spaceship1 = Spaceship.create(0, 0, "#0F0", "/demo-game/img/spaceship.png");
 	  this.spaceship2 = Spaceship.create(50, 100, "#F00");
 
 	  this.projectiles = [];
@@ -126,6 +119,7 @@
 	  };
 
 	  this._fire = function() {
+	    console.log("fire");
 	    if (this.stage.mouseInBounds) {
 	      var laser = this.spaceship1.fire();
 	      this.stage.addChild(laser.getSelf());
@@ -194,9 +188,12 @@
 
 	var Laser = __webpack_require__(3);
 
-	function SpaceShip(startingX, startingY, color) {
+	// so for now, if you use an image you need the startingX and startingY args to be 0
+	function SpaceShip(startingX, startingY, color, imagePath) {
 
 	  this.triangle = new createjs.Shape();
+	  this.imagePath = imagePath;
+	  this.color = color;
 	  this.startingX = startingX;
 	  this.startingY = startingY;
 	  this.posX = 0;
@@ -208,7 +205,16 @@
 	  this.angle = -90;
 
 	  this.draw = function() {
-	    this.triangle.graphics.beginFill(color).drawPolyStar(this.startingX, this.startingY, this.radius, this.noOfPoints, this.pointSize, this.angle);
+	    if (this.imagePath) {
+	      this.triangle = new createjs.Bitmap(imagePath);
+	      this.triangle.regX = 50;
+	      this.triangle.regY = 50;
+	      this.triangle.x = this.startingX;
+	      this.triangle.y = this.startingY;
+	    } else {
+	      this.triangle = new createjs.Shape();
+	      this.triangle.graphics.beginFill(this.color).drawPolyStar(this.startingX, this.startingY, this.radius, this.noOfPoints, this.pointSize, this.angle);
+	    }
 	  };
 
 	  this.getSelf = function() {
@@ -257,15 +263,15 @@
 	  };
 
 	  this.fire = function() {
-	    var laser = Laser.create(this.getCurrentX(), this.getCurrentY());
+	    var laser = Laser.create(this.getCurrentX(), this.getCurrentY() - this.radius);
 	    laser.draw();
 	    return laser;
 	  };
 	}
 
 	function SpaceShipFactory() {
-	  this.create = function(startingX, startingY, color) {
-	    return new SpaceShip(startingX, startingY, color);
+	  this.create = function(startingX, startingY, color, image) {
+	    return new SpaceShip(startingX, startingY, color, image);
 	  }
 	}
 

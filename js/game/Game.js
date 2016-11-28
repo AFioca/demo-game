@@ -7,7 +7,8 @@ function Game(canvasId) {
   this.height = this.stage.canvas.height;
   this.width = this.stage.canvas.width;
 
-  this.spaceship1 = Spaceship.create(200, 200, "#0F0");
+  // this.spaceship1 = Spaceship.create(200, 200, "#0F0");
+  this.spaceship1 = Spaceship.create(0, 0, "#0F0", "/demo-game/img/spaceship.png");
   this.spaceship2 = Spaceship.create(50, 100, "#F00");
 
   this.projectiles = [];
@@ -58,6 +59,7 @@ function Game(canvasId) {
   };
 
   this._fire = function() {
+    console.log("fire");
     if (this.stage.mouseInBounds) {
       var laser = this.spaceship1.fire();
       this.stage.addChild(laser.getSelf());
