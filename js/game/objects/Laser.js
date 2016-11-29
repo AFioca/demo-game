@@ -10,6 +10,7 @@ function Laser(startingX, startingY) {
   this.height = 12;
   this.width = 6;
   this.speed = 5;
+  this.isFriendly = true;
   this.isExpired = false;
 
   this.draw = function() {
@@ -21,10 +22,18 @@ function Laser(startingX, startingY) {
   };
 
   this.move = function() {
-    this.rectangle.y = this.rectangle.y - this.speed;
+    if (this.isFriendly)
+      this.rectangle.y = this.rectangle.y - this.speed;
+    else
+      this.rectangle.y = this.rectangle.y + this.speed;
   };
 
   this.getTopBoundry = function() {
+    // PLUS OR MINUS?
+    return (this.rectangle.y + this.startingY - (this.height / 2));
+  };
+
+  this.getBottomBoundry = function() {
     return (this.rectangle.y + this.startingY + (this.height / 2));
   };
 

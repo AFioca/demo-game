@@ -32,6 +32,18 @@ function SpaceShip(imagePath) {
     this.sprite.y = this.sprite.y + y;
   };
 
+  this.collidesWithCoordinates = function(x, y) {
+    return (this.isWithinXBoundaries(x) && this.isWithinYBoundaries(y));
+  };
+
+  this.isWithinYBoundaries = function(yValue) {
+    return (yValue >= this.getTopBoundry() && yValue <= this.getBottomBoundry());
+  };
+
+  this.isWithinXBoundaries = function(xValue) {
+    return (xValue >= this.getLeftBoundry() && xValue <= this.getRightBoundry());
+  };
+
   this.getCurrentX = function() {
     return this.sprite.x;
   };

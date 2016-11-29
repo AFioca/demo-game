@@ -9,7 +9,6 @@
   "author": "Aaron Fioca",
   "license": "ISC",
   "dependencies": {
-    "createjs-easeljs": "^0.8.2",
     "webpack": "^1.13.3"
   }
 }

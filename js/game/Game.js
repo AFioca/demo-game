@@ -1,23 +1,49 @@
 var Spaceship = require('./objects/Spaceship');
-var StageManager = require('./managers/StageManager');
+var AssetManager = require('./managers/AssetManager');
 
 function Game(canvasId) {
 
-  this.player1 = Spaceship.create("/demo-game/img/spaceship.png");
+  this.stage = new createjs.Stage(canvasId);
+
+  this.enemyAttackFrequency = 90;
+  this.frameCount = 0;
+
   this.isPaused = false;
-  this.stageManager = StageManager.create(canvasId, 12);
+  this.assetManager = AssetManager.create();
+
 
   this.init = function() {
-    this.stageManager.init(this.player1);
+
+    this.assetManager.init(this.stage, 12);
+    // add listeners
+    this.stage.addEventListener("click", this._fire.bind(this));
 
     this._configureTicker();
 
-    this.stageManager.stage.addEventListener("click", this._fire.bind(this));
   };
 
   this.tick = function() {
     if (!this.isPaused) {
-      this.stageManager.update(this.player1);
+
+      // update player position
+      this._updatePlayerLocation();
+      // update enemy ship locations
+      this.assetManager.moveEnemyShips();
+      // npc fire
+      this._handleEnemyAttacks();
+      // update projectile locations
+      this.assetManager.moveProjectiles();
+      // check for collisions
+      this.assetManager.handleProjectileCollisions(this.stage);
+      // update explosions
+      this.assetManager.updateExplosions();
+
+      // remove expired assets from stage
+      this.assetManager.removeDestroyedShips(this.stage);
+      this.assetManager.removeExpiredProjectiles(this.stage);
+      this.assetManager.removeExpiredExplosions(this.stage);
+
+      this.stage.update();
     }
   };
 
@@ -33,9 +59,22 @@ function Game(canvasId) {
 
   this._fire = function() {
     console.log("fire");
-    if (!this.isPaused && this.stageManager.mouseIsInBounds()) {
-      var laser = this.player1.fire();
-      this.stageManager.addProjectile(laser);
+    if (!this.isPaused && this.stage.mouseInBounds) {
+      this.assetManager.firePlayer1(this.stage);
+    }
+  };
+
+  this._updatePlayerLocation = function() {
+    if (this.stage.mouseInBounds) {
+      this.assetManager.movePlayerShip(this.stage.mouseX, this.stage.mouseY);
+    }
+  };
+
+  this._handleEnemyAttacks = function() {
+    this.frameCount = this.frameCount + 1;
+    if (this.frameCount >= this.enemyAttackFrequency) {
+      this.frameCount = 0;
+      this.assetManager.fireEnemyShip(this.stage);
     }
   };
 }
