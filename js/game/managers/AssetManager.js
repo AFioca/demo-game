@@ -28,7 +28,6 @@ function AssetManager() {
     this._addAssetsToStage(stage);
   };
 
-  /** PLAYER CONTROLS **/
   this.firePlayer1 = function() {
     if (this.stage.mouseInBounds) {
       var laser = this.player1.fire();
@@ -36,8 +35,6 @@ function AssetManager() {
       this.stage.addChild(laser.getSelf());
     }
   };
-
-  /** UPDATE METHODS **/
 
   this.updateAssets = function() {
     this._moveBackground();
@@ -53,6 +50,10 @@ function AssetManager() {
     this._removeExpiredExplosions(this.stage);
 
     this.stage.update();
+  };
+
+  this.getPlayerHealth = function() {
+    return this.player1.health;
   };
 
   /** PRIVATE METHODS **/

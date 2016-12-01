@@ -70,6 +70,8 @@
 	  this.isPaused = false;
 	  this.assetManager = AssetManager.create();
 
+	  this.healthId = "health";
+
 	  this.init = function(gameCanvasId) {
 	    var stage = new createjs.Stage(gameCanvasId);
 	    stage.addEventListener("click", this._fire.bind(this));
@@ -80,6 +82,7 @@
 	  this.tick = function() {
 	    if (!this.isPaused) {
 	      this.assetManager.updateAssets();
+	      this._updateHealth();
 	    }
 	  };
 
@@ -99,6 +102,10 @@
 	    }
 	  };
 
+	  this._updateHealth = function() {
+	    document.getElementById(this.healthId).innerHTML = this.assetManager.getPlayerHealth();
+	  };
+
 	}
 
 	function GameFactory() {
@@ -114,15 +121,13 @@
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Laser = __webpack_require__(4);
-	var EventBus = __webpack_require__(6);
-	var NavigationSystem = __webpack_require__(11);
+	var Laser = __webpack_require__(3);
+	var NavigationSystem = __webpack_require__(5);
 
 	function SpaceShip(imagePath) {
 
 	  // game attributes
 	  this.health = 100;
-	  this.isPlayer = false;
 
 	  this.navigationSystem = NavigationSystem.create();
 
@@ -230,9 +235,6 @@
 	    if (this.health < 50) {
 	      this.sprite.gotoAndPlay("damaged");
 	    }
-	    if (this.isPlayer) {
-	      EventBus.dispatchPlayerDamageEvent(this);
-	    }
 	  };
 	}
 
@@ -249,25 +251,9 @@
 
 /***/ },
 /* 3 */
-/***/ function(module, exports) {
-
-	function NumberUtility() {
-
-	  this.getRandomNumberBetween = function(min, max) {
-	    return Math.floor(Math.random()*(max-min+1)+min);
-	  };
-	}
-
-	var numberUtility = new NumberUtility();
-
-	module.exports = numberUtility;
-
-
-/***/ },
-/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Explosion = __webpack_require__(5);
+	var Explosion = __webpack_require__(4);
 
 	function Laser(startingX, startingY) {
 
@@ -333,7 +319,7 @@
 
 
 /***/ },
-/* 5 */
+/* 4 */
 /***/ function(module, exports) {
 
 	function Explostion(startingX, startingY) {
@@ -377,34 +363,79 @@
 
 
 /***/ },
-/* 6 */
-/***/ function(module, exports) {
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
 
-	
-	function EventBus() {
+	var NumberUtility = __webpack_require__(6);
 
-	  // separate out into constants file maybe
-	  this.PLAYER_DAMAGED = "player-damaged";
+	function NavigationSystem() {
 
-	  this.dispatchPlayerDamageEvent = function(playerShip) {
-	    var evt = new createjs.Event(this.PLAYER_DAMAGED);
-	    evt.playerShip = playerShip;
-	    this.dispatchEvent(evt);
+	  this.directions = ["up", "down", "left", "right"];
+	  this.direction = "right"; // For now, up, down, right, left
+	  this.maxPersistance = 120;
+	  this.persistanceCount = NumberUtility.getRandomNumberBetween(1, this.maxPersistance); // random number
+	  this.persistanceAttempts = 0;
+
+	  this.resetPersistantCount = function() {
+	    this.persistanceCount = NumberUtility.getRandomNumberBetween(1, this.maxPersistance);
+	    this.persistanceAttempts = 0;
+	  };
+
+	  this.resetDirection = function() {
+	    var newDirection = null;
+	    var newDirectionSet = false;
+	    while (!newDirectionSet) {
+	      newDirection = this.directions[NumberUtility.getRandomNumberBetween(0,3)];
+	      if (newDirection !== this.direction) {
+	        this.direction = newDirection;
+	        newDirectionSet = true;
+	      }
+	    }
+	  };
+
+	  this.incrementAttempts = function() {
+	    if (this.persistanceAttempts != this.persistanceCount) {
+	      this.persistanceAttempts = this.persistanceAttempts + 1;
+	    } else {
+	      this.resetDirection();
+	      this.resetPersistantCount()
+	    }
+
 	  };
 	}
 
-	new createjs.EventDispatcher.initialize(EventBus.prototype);
+	function NavigationSystemFactory() {
+	  this.create = function() {
+	    return new NavigationSystem();
+	  };
+	}
 
-	module.exports = new EventBus();
+	module.exports = new NavigationSystemFactory();
+
+
+/***/ },
+/* 6 */
+/***/ function(module, exports) {
+
+	function NumberUtility() {
+
+	  this.getRandomNumberBetween = function(min, max) {
+	    return Math.floor(Math.random()*(max-min+1)+min);
+	  };
+	}
+
+	var numberUtility = new NumberUtility();
+
+	module.exports = numberUtility;
 
 
 /***/ },
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var NumberUtility = __webpack_require__(3);
+	var NumberUtility = __webpack_require__(6);
 	var Spaceship = __webpack_require__(2);
-	var TrafficController = __webpack_require__(10);
+	var TrafficController = __webpack_require__(8);
 
 	function AssetManager() {
 
@@ -432,7 +463,6 @@
 	    this._addAssetsToStage(stage);
 	  };
 
-	  /** PLAYER CONTROLS **/
 	  this.firePlayer1 = function() {
 	    if (this.stage.mouseInBounds) {
 	      var laser = this.player1.fire();
@@ -440,8 +470,6 @@
 	      this.stage.addChild(laser.getSelf());
 	    }
 	  };
-
-	  /** UPDATE METHODS **/
 
 	  this.updateAssets = function() {
 	    this._moveBackground();
@@ -457,6 +485,10 @@
 	    this._removeExpiredExplosions(this.stage);
 
 	    this.stage.update();
+	  };
+
+	  this.getPlayerHealth = function() {
+	    return this.player1.health;
 	  };
 
 	  /** PRIVATE METHODS **/
@@ -630,9 +662,7 @@
 
 
 /***/ },
-/* 8 */,
-/* 9 */,
-/* 10 */
+/* 8 */
 /***/ function(module, exports) {
 
 	
@@ -697,57 +727,6 @@
 
 	var trafficController = new TrafficController();
 	module.exports = trafficController;
-
-
-/***/ },
-/* 11 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var NumberUtility = __webpack_require__(3);
-
-	function NavigationSystem() {
-
-	  this.directions = ["up", "down", "left", "right"];
-	  this.direction = "right"; // For now, up, down, right, left
-	  this.maxPersistance = 120;
-	  this.persistanceCount = NumberUtility.getRandomNumberBetween(1, this.maxPersistance); // random number
-	  this.persistanceAttempts = 0;
-
-	  this.resetPersistantCount = function() {
-	    this.persistanceCount = NumberUtility.getRandomNumberBetween(1, this.maxPersistance);
-	    this.persistanceAttempts = 0;
-	  };
-
-	  this.resetDirection = function() {
-	    var newDirection = null;
-	    var newDirectionSet = false;
-	    while (!newDirectionSet) {
-	      newDirection = this.directions[NumberUtility.getRandomNumberBetween(0,3)];
-	      if (newDirection !== this.direction) {
-	        this.direction = newDirection;
-	        newDirectionSet = true;
-	      }
-	    }
-	  };
-
-	  this.incrementAttempts = function() {
-	    if (this.persistanceAttempts != this.persistanceCount) {
-	      this.persistanceAttempts = this.persistanceAttempts + 1;
-	    } else {
-	      this.resetDirection();
-	      this.resetPersistantCount()
-	    }
-
-	  };
-	}
-
-	function NavigationSystemFactory() {
-	  this.create = function() {
-	    return new NavigationSystem();
-	  };
-	}
-
-	module.exports = new NavigationSystemFactory();
 
 
 /***/ }

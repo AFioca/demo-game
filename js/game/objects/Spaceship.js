@@ -1,12 +1,10 @@
 var Laser = require('./Laser');
-var EventBus = require('../EventBus');
 var NavigationSystem = require('./NavigationSystem');
 
 function SpaceShip(imagePath) {
 
   // game attributes
   this.health = 100;
-  this.isPlayer = false;
 
   this.navigationSystem = NavigationSystem.create();
 
@@ -113,9 +111,6 @@ function SpaceShip(imagePath) {
     this.health = this.health - amount;
     if (this.health < 50) {
       this.sprite.gotoAndPlay("damaged");
-    }
-    if (this.isPlayer) {
-      EventBus.dispatchPlayerDamageEvent(this);
     }
   };
 }

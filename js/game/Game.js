@@ -6,6 +6,8 @@ function Game() {
   this.isPaused = false;
   this.assetManager = AssetManager.create();
 
+  this.healthId = "health";
+
   this.init = function(gameCanvasId) {
     var stage = new createjs.Stage(gameCanvasId);
     stage.addEventListener("click", this._fire.bind(this));
@@ -16,6 +18,7 @@ function Game() {
   this.tick = function() {
     if (!this.isPaused) {
       this.assetManager.updateAssets();
+      this._updateHealth();
     }
   };
 
@@ -33,6 +36,10 @@ function Game() {
     if (!this.isPaused) {
       this.assetManager.firePlayer1();
     }
+  };
+
+  this._updateHealth = function() {
+    document.getElementById(this.healthId).innerHTML = this.assetManager.getPlayerHealth();
   };
 
 }
