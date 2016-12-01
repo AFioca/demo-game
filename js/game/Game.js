@@ -1,49 +1,21 @@
 var Spaceship = require('./objects/Spaceship');
 var AssetManager = require('./managers/AssetManager');
 
-function Game(canvasId) {
-
-  this.stage = new createjs.Stage(canvasId);
-
-  this.enemyAttackFrequency = 90;
-  this.frameCount = 0;
+function Game() {
 
   this.isPaused = false;
   this.assetManager = AssetManager.create();
 
-
-  this.init = function() {
-
-    this.assetManager.init(this.stage, 12);
-    // add listeners
-    this.stage.addEventListener("click", this._fire.bind(this));
-
+  this.init = function(gameCanvasId) {
+    var stage = new createjs.Stage(gameCanvasId);
+    stage.addEventListener("click", this._fire.bind(this));
+    this.assetManager.init(stage, 8, 90);
     this._configureTicker();
-
   };
 
   this.tick = function() {
     if (!this.isPaused) {
-
-      // update player position
-      this._updatePlayerLocation();
-      // update enemy ship locations
-      this.assetManager.moveEnemyShips();
-      // npc fire
-      this._handleEnemyAttacks();
-      // update projectile locations
-      this.assetManager.moveProjectiles();
-      // check for collisions
-      this.assetManager.handleProjectileCollisions(this.stage);
-      // update explosions
-      this.assetManager.updateExplosions();
-
-      // remove expired assets from stage
-      this.assetManager.removeDestroyedShips(this.stage);
-      this.assetManager.removeExpiredProjectiles(this.stage);
-      this.assetManager.removeExpiredExplosions(this.stage);
-
-      this.stage.update();
+      this.assetManager.updateAssets();
     }
   };
 
@@ -58,30 +30,16 @@ function Game(canvasId) {
   };
 
   this._fire = function() {
-    console.log("fire");
-    if (!this.isPaused && this.stage.mouseInBounds) {
-      this.assetManager.firePlayer1(this.stage);
+    if (!this.isPaused) {
+      this.assetManager.firePlayer1();
     }
   };
 
-  this._updatePlayerLocation = function() {
-    if (this.stage.mouseInBounds) {
-      this.assetManager.movePlayerShip(this.stage.mouseX, this.stage.mouseY);
-    }
-  };
-
-  this._handleEnemyAttacks = function() {
-    this.frameCount = this.frameCount + 1;
-    if (this.frameCount >= this.enemyAttackFrequency) {
-      this.frameCount = 0;
-      this.assetManager.fireEnemyShip(this.stage);
-    }
-  };
 }
 
 function GameFactory() {
-  this.create = function(canvasId) {
-    return new Game(canvasId);
+  this.create = function() {
+    return new Game();
   };
 }
 

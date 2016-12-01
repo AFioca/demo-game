@@ -1,9 +1,14 @@
 var Laser = require('./Laser');
+var EventBus = require('../EventBus');
+var NavigationSystem = require('./NavigationSystem');
 
 function SpaceShip(imagePath) {
 
   // game attributes
   this.health = 100;
+  this.isPlayer = false;
+
+  this.navigationSystem = NavigationSystem.create();
 
   // visual attributes
   this.spriteSheet = new createjs.SpriteSheet({
@@ -27,9 +32,31 @@ function SpaceShip(imagePath) {
     return this.sprite;
   };
 
+  this.move = function() {
+    var direction = this.navigationSystem.direction;
+    if (direction === "right") {
+      this.moveSpaces(1, 0);
+    } else if (direction === "left") {
+      this.moveSpaces(-1, 0);
+    } else if (direction === "up") {
+      this.moveSpaces(0, -1);
+    } else if (direction === "down") {
+      this.moveSpaces(0, 1);
+    }
+
+  };
+
+  this.moveAttemptCompleted = function() {
+    this.navigationSystem.incrementAttempts();
+  };
+
   this.moveSpaces = function(x, y) {
     this.sprite.x = this.sprite.x + x;
     this.sprite.y = this.sprite.y + y;
+  };
+
+  this.getDirection = function() {
+    return this.navigationSystem.direction;
   };
 
   this.collidesWithCoordinates = function(x, y) {
@@ -86,6 +113,9 @@ function SpaceShip(imagePath) {
     this.health = this.health - amount;
     if (this.health < 50) {
       this.sprite.gotoAndPlay("damaged");
+    }
+    if (this.isPlayer) {
+      EventBus.dispatchPlayerDamageEvent(this);
     }
   };
 }

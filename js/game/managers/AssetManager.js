@@ -1,126 +1,58 @@
+var NumberUtility = require('../NumberUtility');
 var Spaceship = require('../objects/Spaceship');
+var TrafficController = require('../controllers/TrafficController');
 
 function AssetManager() {
 
+  this.stage = null;
   this.height = null;
   this.width = null;
 
   this.backgroundImage1 = new createjs.Bitmap("/demo-game/img/space-background.png");
   this.backgroundImage2 = new createjs.Bitmap("/demo-game/img/space-background.png");
 
-
   this.player1 = Spaceship.create("/demo-game/img/spaceship.png");
   this.projectiles = [];
   this.explosions = [];
   this.enemyShips = [];
 
-  this.init = function(stage, enemyShipCount) {
+  this.enemyAttackFrequency = 90;
+  this.frameCount = 0;
+
+  this.init = function(stage, enemyShipCount, attackFreq) {
+    this.stage = stage;
     this.height = stage.canvas.height;
     this.width = stage.canvas.width;
+    this.enemyAttackFrequency = attackFreq;
     this._setupAssets(enemyShipCount);
     this._addAssetsToStage(stage);
   };
 
   /** PLAYER CONTROLS **/
-  this.firePlayer1 = function(stage) {
-    var laser = this.player1.fire();
-    this.projectiles.push(laser);
-    stage.addChild(laser.getSelf());
-  };
-
-  this.movePlayerShip = function(x, y) {
-    // hiding this here for now, if you think about the ship's location relative to space, this makes sense anyway! lol
-    this._moveBackground();
-    this.player1.moveToX(x);
-    this.player1.moveToY(y);
+  this.firePlayer1 = function() {
+    if (this.stage.mouseInBounds) {
+      var laser = this.player1.fire();
+      this.projectiles.push(laser);
+      this.stage.addChild(laser.getSelf());
+    }
   };
 
   /** UPDATE METHODS **/
 
-  this.moveEnemyShips = function() {
-    for (var i = 0; i < this.enemyShips.length; i++) {
-      if (this.enemyShips[i].getCurrentY() < 100) {
-        if (this.enemyShips[i].getLeftBoundry() >= this.width) {
-          this.enemyShips[i].moveToX(0 - this.enemyShips[i].radius);
-        }
-        this.enemyShips[i].moveSpaces(1, 0);
-      } else {
-        if (this.enemyShips[i].getRightBoundry() <= 0) {
-          this.enemyShips[i].moveToX(this.width + this.enemyShips[i].radius);
-        }
-        this.enemyShips[i].moveSpaces(-1, 0);
-      }
-    }
-  };
+  this.updateAssets = function() {
+    this._moveBackground();
+    this._movePlayerShip();
+    this._moveEnemyShips();
+    this._attackWithEnemyShips(this.stage);
+    this._moveProjectiles();
+    this._handleProjectileCollisions(this.stage);
+    this._updateExplosions();
 
-  this.fireEnemyShip = function(stage) {
-    var randomIndex = this._getRandomIndex(this.enemyShips.length - 1, 0);
-    console.log(randomIndex);
-    var projectile = this.enemyShips[randomIndex].fire();
-    projectile.isFriendly = false;
-    this.projectiles.push(projectile);
-    stage.addChild(projectile.getSelf());
-  };
+    this._removeDestroyedShips(this.stage);
+    this._removeExpiredProjectiles(this.stage);
+    this._removeExpiredExplosions(this.stage);
 
-  this.moveProjectiles = function() {
-    for (var i = 0; i < this.projectiles.length; i++) {
-      var projectile = this.projectiles[i];
-      projectile.move();
-      var xValue = projectile.getCurrentX();
-      var yValue = projectile.getCurrentY();
-      if (xValue > this.width || xValue < 0) {
-        projectile.isExpired = true;
-      } else if (yValue > this.height || yValue < 0) {
-        projectile.isExpired = true;
-      }
-    }
-  };
-
-  this.handleProjectileCollisions = function(stage) {
-    for (var i = 0; i < this.projectiles.length; i++) {
-      var projectile = this.projectiles[i];
-      if (projectile.isFriendly) {
-        console.log("friendly projectile");
-        this._handleEnemyCollision(stage, projectile);
-      } else if (this.player1.collidesWithCoordinates(projectile.getCurrentX(), projectile.getCurrentY())) {
-        this._handleCollision(projectile, this.player1, stage);
-      }
-    }
-  };
-
-  this.updateExplosions = function() {
-    for (var i = 0; i < this.explosions.length; i++) {
-      this.explosions[i].explode();
-    }
-  };
-
-  /** CLEANUP METHODS **/
-
-  this.removeDestroyedShips = function(stage) {
-    for (var i = 0; i < this.enemyShips.length; i++) {
-      if (this.enemyShips[i].health <= 0) {
-        stage.removeChild(this.enemyShips[i].getSelf());
-        this.enemyShips.splice(i, 1);
-      }
-    }
-  };
-
-  this.removeExpiredProjectiles = function(stage) {
-    for (var i = 0; i < this.projectiles.length; i++) {
-      if (this.projectiles[i].isExpired) {
-        stage.removeChild(this.projectiles[i].getSelf());
-        this.projectiles.splice(i, 1);
-      }
-    }
-  };
-
-  this.removeExpiredExplosions = function(stage) {
-    for (var i = 0; i < this.explosions.length; i++) {
-      if (this.explosions[i].isExpired) {
-        stage.removeChild(this.explosions[i].getSelf());
-        this.explosions.splice(i, 1);
-      }
-    }
+    this.stage.update();
   };
 
   /** PRIVATE METHODS **/
@@ -145,7 +77,7 @@ function AssetManager() {
     // this logic is ideal for up to 12 ships on an 800 px wide canvas, I'm defering
     // making this more dynamic since this is a proof of concept
     var startingX = 50;
-    var startingY = 60;
+    var startingY = 80;
     for (var i = 0; i < enemyShipCount; i++) {
       var enemyShip = Spaceship.create("/demo-game/img/enemy-spaceship.png");
       enemyShip.moveToX(startingX);
@@ -160,8 +92,97 @@ function AssetManager() {
     }
   };
 
-  this._getRandomIndex = function(max, min) {
-    return Math.floor(Math.random()*(max-min+1)+min);
+  this._movePlayerShip = function() {
+    if (this.stage.mouseInBounds) {
+      this.player1.moveToX(this.stage.mouseX);
+      this.player1.moveToY(this.stage.mouseY);
+    }
+  };
+
+  this._moveEnemyShips = function() {
+    for (var n = 0; n < this.enemyShips.length; n++) {
+      var ship = this.enemyShips[n];
+      if (TrafficController.pathIsClear(ship, this.enemyShips, this.projectiles, this.height - 400, this.width)) {
+        ship.move();
+      }
+      ship.moveAttemptCompleted();
+    }
+  };
+
+  this._attackWithEnemyShips = function(stage) {
+    this.frameCount = this.frameCount + 1;
+    if (this.frameCount >= this.enemyAttackFrequency) {
+      this.frameCount = 0;
+      this._fireEnemyShip(stage);
+    }
+  };
+
+  this._moveProjectiles = function() {
+    for (var i = 0; i < this.projectiles.length; i++) {
+      var projectile = this.projectiles[i];
+      projectile.move();
+      var xValue = projectile.getCurrentX();
+      var yValue = projectile.getCurrentY();
+      if (xValue > this.width || xValue < 0) {
+        projectile.isExpired = true;
+      } else if (yValue > this.height || yValue < 0) {
+        projectile.isExpired = true;
+      }
+    }
+  };
+
+  this._handleProjectileCollisions = function(stage) {
+    for (var i = 0; i < this.projectiles.length; i++) {
+      var projectile = this.projectiles[i];
+      if (projectile.isFriendly) {
+        console.log("friendly projectile");
+        this._handleEnemyCollision(stage, projectile);
+      } else if (this.player1.collidesWithCoordinates(projectile.getCurrentX(), projectile.getCurrentY())) {
+        this._handleCollision(projectile, this.player1, stage);
+      }
+    }
+  };
+
+  this._updateExplosions = function() {
+    for (var i = 0; i < this.explosions.length; i++) {
+      this.explosions[i].explode();
+    }
+  };
+
+  this._removeDestroyedShips = function(stage) {
+    for (var i = 0; i < this.enemyShips.length; i++) {
+      if (this.enemyShips[i].health <= 0) {
+        stage.removeChild(this.enemyShips[i].getSelf());
+        this.enemyShips.splice(i, 1);
+      }
+    }
+  };
+
+  this._removeExpiredProjectiles = function(stage) {
+    for (var i = 0; i < this.projectiles.length; i++) {
+      if (this.projectiles[i].isExpired) {
+        stage.removeChild(this.projectiles[i].getSelf());
+        this.projectiles.splice(i, 1);
+      }
+    }
+  };
+
+  this._removeExpiredExplosions = function(stage) {
+    for (var i = 0; i < this.explosions.length; i++) {
+      if (this.explosions[i].isExpired) {
+        stage.removeChild(this.explosions[i].getSelf());
+        this.explosions.splice(i, 1);
+      }
+    }
+  };
+
+  this._fireEnemyShip = function(stage) {
+    var randomIndex = NumberUtility.getRandomNumberBetween(this.enemyShips.length - 1, 0);
+    console.log(randomIndex);
+    var projectile = this.enemyShips[randomIndex].fire();
+    projectile.isFriendly = false;
+    this.projectiles.push(projectile);
+    stage.addChild(projectile.getSelf());
   };
 
   this._moveBackground = function() {
