@@ -12,10 +12,6 @@ function Game() {
 
   this.healthId = "health";
 
-  // this.pauseScreen = null;
-  // this.pauseText = null;
-  // this.switchText = null;
-
   this.init = function(gameCanvasId) {
     this.stage = new createjs.Stage(gameCanvasId);
     this.stage.addEventListener("click", this._fire.bind(this));
@@ -52,11 +48,6 @@ function Game() {
     if (!this.isPaused) {
       this.assetManager.firePlayer1();
     }
-  };
-
-  this._switchWeapon = function() {
-    console.log("BOOM");
-    this.assetManager.player1.switchWeapon();
   };
 
   this._updateHealth = function() {

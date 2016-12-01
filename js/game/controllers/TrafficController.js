@@ -40,17 +40,29 @@ function TrafficController() {
   };
 
   this._willCollideWithShips = function(ship, ships) {
-    // doesn't quite work yet...
+    // I'm sure there's a cleaner way, but this works so I'm leaving it for now.
     var direction = ship.getDirection();
     var willCollide = false;
     for (var n = 0; n < ships.length; n++) {
-      if (direction === "right" && ships[n].collidesWithCoordinates(ship.getRightBoundry() + 1, ship.getCurrentY())) {
+      if (direction === "right" && (
+          ships[n].collidesWithCoordinates(ship.getRightBoundry() + 1, ship.getCurrentY()) ||
+          ships[n].collidesWithCoordinates(ship.getRightBoundry() + 1, ship.getTopBoundry()) ||
+          ships[n].collidesWithCoordinates(ship.getRightBoundry() + 1, ship.getBottomBoundry()))) {
         willCollide = true;
-      } else if (direction === "left" && ships[n].collidesWithCoordinates(ship.getLeftBoundry() - 1, ship.getCurrentY())) {
+      } else if (direction === "left" && (
+                 ships[n].collidesWithCoordinates(ship.getLeftBoundry() - 1, ship.getCurrentY()) ||
+                 ships[n].collidesWithCoordinates(ship.getLeftBoundry() - 1, ship.getTopBoundry()) ||
+                 ships[n].collidesWithCoordinates(ship.getLeftBoundry() - 1, ship.getBottomBoundry()))) {
         willCollide = true;
-      } else if (direction === "up" && ships[n].collidesWithCoordinates(ship.getTopBoundry() - 1, ship.getCurrentY())) {
+      } else if (direction === "up" && (
+                 ships[n].collidesWithCoordinates(ship.getCurrentX(), ship.getTopBoundry() - 1) ||
+                 ships[n].collidesWithCoordinates(ship.getLeftBoundry(), ship.getTopBoundry() - 1) ||
+                 ships[n].collidesWithCoordinates(ship.getRightBoundry(), ship.getTopBoundry() - 1))) {
         willCollide = true;
-      } else if (direction === "down" && ships[n].collidesWithCoordinates(ship.getTopBoundry() + 1, ship.getCurrentY())) {
+      } else if (direction === "down" && (
+                 ships[n].collidesWithCoordinates(ship.getCurrentX(), ship.getBottomBoundry() + 1) ||
+                 ships[n].collidesWithCoordinates(ship.getLeftBoundry(), ship.getBottomBoundry() + 1) ||
+                 ships[n].collidesWithCoordinates(ship.getRightBoundry(), ship.getBottomBoundry() + 1))) {
         willCollide = true;
       }
     }
