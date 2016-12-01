@@ -106,6 +106,10 @@ function SpaceShip(imagePath) {
     return this.weaponsSystem.fire(this.getCurrentX(), this.getCurrentY() - this.radius);
   };
 
+  this.switchWeapon = function(type) {
+    this.weaponsSystem.switchWeapon(type);
+  };
+
   this.takeDamage = function(amount) {
     this.health = this.health - amount;
     if (this.health < 50) {

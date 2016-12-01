@@ -63,19 +63,27 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var Spaceship = __webpack_require__(2);
-	var AssetManager = __webpack_require__(6);
+	var AssetManager = __webpack_require__(8);
+	var PauseScreen = __webpack_require__(10);
 
 	function Game() {
 
 	  this.isPaused = false;
+	  this.stage = null;
+
 	  this.assetManager = AssetManager.create();
+	  this.pauseScreen = PauseScreen.create();
 
 	  this.healthId = "health";
 
+	  // this.pauseScreen = null;
+	  // this.pauseText = null;
+	  // this.switchText = null;
+
 	  this.init = function(gameCanvasId) {
-	    var stage = new createjs.Stage(gameCanvasId);
-	    stage.addEventListener("click", this._fire.bind(this));
-	    this.assetManager.init(stage, 8, 90);
+	    this.stage = new createjs.Stage(gameCanvasId);
+	    this.stage.addEventListener("click", this._fire.bind(this));
+	    this.assetManager.init(this.stage, 8, 90);
 	    this._configureTicker();
 	  };
 
@@ -84,10 +92,18 @@
 	      this.assetManager.updateAssets();
 	      this._updateHealth();
 	    }
+	    this.stage.update();
 	  };
 
 	  this.togglePause = function() {
 	    this.isPaused = !this.isPaused;
+	    if (this.isPaused) {
+	      // probably should pass it some config data or at least the space ship
+	      this.pauseScreen.init(this.stage);
+	    } else {
+	      var selectedweapon = this.pauseScreen.tearDown(this.stage);
+	      this.assetManager.player1.switchWeapon(selectedweapon);
+	    }
 	  };
 
 	  this._configureTicker = function() {
@@ -100,6 +116,11 @@
 	    if (!this.isPaused) {
 	      this.assetManager.firePlayer1();
 	    }
+	  };
+
+	  this._switchWeapon = function() {
+	    console.log("BOOM");
+	    this.assetManager.player1.switchWeapon();
 	  };
 
 	  this._updateHealth = function() {
@@ -122,7 +143,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var NavigationSystem = __webpack_require__(3);
-	var WeaponsSystem = __webpack_require__(11);
+	var WeaponsSystem = __webpack_require__(5);
 
 	function SpaceShip(imagePath) {
 
@@ -229,6 +250,10 @@
 	    return this.weaponsSystem.fire(this.getCurrentX(), this.getCurrentY() - this.radius);
 	  };
 
+	  this.switchWeapon = function(type) {
+	    this.weaponsSystem.switchWeapon(type);
+	  };
+
 	  this.takeDamage = function(amount) {
 	    this.health = this.health - amount;
 	    if (this.health < 50) {
@@ -316,13 +341,200 @@
 
 
 /***/ },
-/* 5 */,
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var ProjectileFactory = __webpack_require__(6);
+
+	function WeaponsSystem() {
+
+	  this.activeProjectile = "laser";
+	  this.availableProjectileTypes = ["laser", "plasma"];
+
+	  this.fire = function(x, y) {
+	    var projectile = ProjectileFactory.getProjectile(this.activeProjectile, x, y);
+	    projectile.draw();
+	    return projectile;
+	  };
+
+	  this.switchWeapon = function(type) {
+	    this.activeProjectile = type;
+	  };
+	}
+
+	function WeaponsSystemFactory() {
+	  this.create = function() {
+	    return new WeaponsSystem();
+	  };
+	}
+
+	module.exports = new WeaponsSystemFactory();
+
+
+/***/ },
 /* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Explosion = __webpack_require__(7);
+
+	var Projectiles = {
+	  LASER: {
+	    speed: 5,
+	    damage: 20,
+	    height: 12,
+	    width: 6,
+	    color: "yellow",
+	    getShape: function(x, y) {
+	      var rectangle = new createjs.Shape();
+	      rectangle.graphics.beginFill(this.color).drawRect(0, 0, this.width, this.height);
+	      rectangle.x = x;
+	      rectangle.y = y;
+	      return rectangle;
+	    },
+	    getHeightModifier: function() {
+	      return this.height / 2;
+	    }
+	  },
+	  PLASMA: {
+	    speed: 10,
+	    damage: 40,
+	    radius: 50,
+	    color: "#0F0",
+	    getShape: function(x, y) {
+	      var circle = new createjs.Shape();
+	      circle.graphics.beginFill(this.color).drawCircle(0, 0, 10);
+	      circle.x = x;
+	      circle.y = y;
+	      return circle;
+	    },
+	    getHeightModifier: function() {
+	      return this.radius;
+	    }
+	  }
+	};
+
+	function Projectile(startingX, startingY, config) {
+
+	  this.shape = null;
+
+	  this.damage = config.damage;
+	  this.speed = config.speed;
+	  this.color = config.color;
+	  this.getShape = config.getShape;
+	  this.getHeightModifier = config.getHeightModifier;
+
+	  this.startingX = startingX;
+	  this.startingY = startingY;
+	  this.height = 12;
+	  this.width = 6;
+	  this.isFriendly = true;
+	  this.isExpired = false;
+
+	  this.draw = function() {
+	    this.shape = this.getShape(this.startingX, this.startingY);
+	  };
+
+	  this.getSelf = function() {
+	    return this.shape;
+	  };
+
+	  this.move = function() {
+	    if (this.isFriendly)
+	      this.shape.y = this.shape.y - this.speed;
+	    else
+	      this.shape.y = this.shape.y + this.speed;
+	  };
+
+	  this.getTopBoundry = function() {
+	    // PLUS OR MINUS?
+	    return (this.shape.y - this.getHeightModifier);
+	  };
+
+	  this.getBottomBoundry = function() {
+	    return (this.shape.y + this.getHeightModifier);
+	  };
+
+	  this.getCurrentX = function() {
+	    return (this.shape.x);
+	  };
+
+	  this.getCurrentY = function() {
+	    return (this.shape.y);
+	  };
+
+	  this.explode = function() {
+	    this.isExpired = true;
+	    var explosion = Explosion.create(this.getCurrentX(), this.getCurrentY());
+	    explosion.draw();
+	    return explosion;
+	  };
+
+	}
+
+	function ProjectileFactory() {
+
+	  this.getProjectile = function(type, x, y) {
+	    if (type === "laser")
+	      return new Projectile(x, y, Projectiles.LASER);
+	    else if (type === "plasma")
+	      return new Projectile(x, y, Projectiles.PLASMA);
+	  };
+	}
+
+	module.exports = new ProjectileFactory();
+
+
+/***/ },
+/* 7 */
+/***/ function(module, exports) {
+
+	function Explostion(startingX, startingY) {
+
+	  this.triangle = new createjs.Shape();
+	  this.startingX = startingX;
+	  this.startingY = startingY;
+
+	  this.radius = 35;
+	  this.noOfPoints = 7;
+	  this.pointSize = 0.5;
+	  this.angle = -90;
+
+	  this.isExpired = false;
+
+	  this.draw = function() {
+	    this.triangle.graphics.beginFill("#ff9933").drawPolyStar(this.startingX, this.startingY, this.radius, this.noOfPoints, this.pointSize, this.angle);
+	  };
+
+	  this.getSelf = function() {
+	    return this.triangle;
+	  };
+
+	  this.explode = function() {
+	    this.radius = this.radius + 5;
+	    this.angle = this.angle - 20;
+	    this.draw();
+	    if (this.radius > 60) {
+	      this.isExpired = true;
+	    }
+	  };
+	}
+
+	function ExplosionFactory() {
+	  this.create = function(startingX, startingY) {
+	    return new Explostion(startingX, startingY);
+	  };
+	}
+
+	module.exports = new ExplosionFactory();
+
+
+/***/ },
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var NumberUtility = __webpack_require__(4);
 	var Spaceship = __webpack_require__(2);
-	var TrafficController = __webpack_require__(7);
+	var TrafficController = __webpack_require__(9);
 
 	function AssetManager() {
 
@@ -371,7 +583,7 @@
 	    this._removeExpiredProjectiles(this.stage);
 	    this._removeExpiredExplosions(this.stage);
 
-	    this.stage.update();
+	    // this.stage.update();
 	  };
 
 	  this.getPlayerHealth = function() {
@@ -549,7 +761,7 @@
 
 
 /***/ },
-/* 7 */
+/* 9 */
 /***/ function(module, exports) {
 
 	
@@ -617,188 +829,72 @@
 
 
 /***/ },
-/* 8 */,
-/* 9 */
+/* 10 */
 /***/ function(module, exports) {
 
-	function Explostion(startingX, startingY) {
+	
+	function PauseScreen() {
 
-	  this.triangle = new createjs.Shape();
-	  this.startingX = startingX;
-	  this.startingY = startingY;
+	  this.pauseBackground = new createjs.Shape();
 
-	  this.radius = 35;
-	  this.noOfPoints = 7;
-	  this.pointSize = 0.5;
-	  this.angle = -90;
+	  this.pauseText = new createjs.Text("PAUSED", "40px Arial", "#000000");
+	  this.chooseText = new createjs.Text("Choose Your Weapon", "30px Arial", "#000066");
+	  this.laserText = new createjs.Text("Laser", "20px Arial", "#660000");
+	  this.plasmaText = new createjs.Text("Plasma", "20px Arial", "#660000");
 
-	  this.isExpired = false;
+	  this.selectedWeapon = "laser";
 
-	  this.draw = function() {
-	    this.triangle.graphics.beginFill("#ff9933").drawPolyStar(this.startingX, this.startingY, this.radius, this.noOfPoints, this.pointSize, this.angle);
+	  this.init = function(stage) {
+	    this.pauseBackground.graphics.beginFill("#FFF").drawRect(0, 0, stage.canvas.width, stage.canvas.height);
+	    stage.addChild(this.pauseBackground);
+
+	    this.pauseText.x = (stage.canvas.width / 2) - 80;
+	    this.pauseText.y = 150;
+	    stage.addChild(this.pauseText);
+
+	    this.chooseText.x = (stage.canvas.width / 2) - 145;
+	    this.chooseText.y = 250;
+	    stage.addChild(this.chooseText);
+
+	    this.laserText.x = (stage.canvas.width / 2) - 100;
+	    this.laserText.y = 300;
+	    this.laserText.addEventListener("click", this._setToLaser.bind(this));
+	    stage.addChild(this.laserText);
+	    // this.laserText.addEventListener("click", this._switchWeapon.bind(this));
+
+	    this.plasmaText.x = (stage.canvas.width / 2) + 30;
+	    this.plasmaText.y = 300;
+	    this.plasmaText.addEventListener("click", this._setToPlasma.bind(this));
+	    stage.addChild(this.plasmaText);
 	  };
 
-	  this.getSelf = function() {
-	    return this.triangle;
+	  this.tearDown = function(stage) {
+	    stage.removeChild(this.pauseBackground);
+	    stage.removeChild(this.pauseText);
+	    stage.removeChild(this.chooseText);
+	    stage.removeChild(this.laserText);
+	    stage.removeChild(this.plasmaText);
+	    return this.selectedWeapon;
 	  };
 
-	  this.explode = function() {
-	    this.radius = this.radius + 5;
-	    this.angle = this.angle - 20;
-	    this.draw();
-	    if (this.radius > 60) {
-	      this.isExpired = true;
-	    }
+	  this._setToLaser = function() {
+	    console.log("laser");
+	    this.selectedWeapon = "laser";
 	  };
-	}
 
-	function ExplosionFactory() {
-	  this.create = function(startingX, startingY) {
-	    return new Explostion(startingX, startingY);
-	  };
-	}
-
-	module.exports = new ExplosionFactory();
-
-
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Explosion = __webpack_require__(9);
-
-	var Projectiles = {
-	  LASER: {
-	    speed: 5,
-	    damage: 20,
-	    height: 12,
-	    width: 6,
-	    color: "yellow",
-	    getShape: function(x, y) {
-	      var rectangle = new createjs.Shape();
-	      rectangle.graphics.beginFill(this.color).drawRect(0, 0, this.width, this.height);
-	      rectangle.x = x;
-	      rectangle.y = y;
-	      return rectangle;
-	    },
-	    getHeightModifier: function() {
-	      return this.height / 2;
-	    }
-	  },
-	  PLASMA: {
-	    speed: 10,
-	    damage: 40,
-	    radius: 50,
-	    color: "#0F0",
-	    getShape: function(x, y) {
-	      var circle = new createjs.Shape();
-	      circle.graphics.beginFill(this.color).drawCircle(0, 0, 10);
-	      circle.x = x;
-	      circle.y = y;
-	      return circle;
-	    },
-	    getHeightModifier: function() {
-	      return this.radius;
-	    }
+	  this._setToPlasma = function() {
+	    console.log("plasma");
+	    this.selectedWeapon = "plasma";
 	  }
-	};
-
-	function Projectile(startingX, startingY, config) {
-
-	  this.shape = null;
-
-	  this.damage = config.damage;
-	  this.speed = config.speed;
-	  this.color = config.color;
-	  this.getShape = config.getShape;
-	  this.getHeightModifier = config.getHeightModifier;
-
-	  this.startingX = startingX;
-	  this.startingY = startingY;
-	  this.height = 12;
-	  this.width = 6;
-	  this.isFriendly = true;
-	  this.isExpired = false;
-
-	  this.draw = function() {
-	    this.shape = this.getShape(this.startingX, this.startingY);
-	  };
-
-	  this.getSelf = function() {
-	    return this.shape;
-	  };
-
-	  this.move = function() {
-	    if (this.isFriendly)
-	      this.shape.y = this.shape.y - this.speed;
-	    else
-	      this.shape.y = this.shape.y + this.speed;
-	  };
-
-	  this.getTopBoundry = function() {
-	    // PLUS OR MINUS?
-	    return (this.shape.y - this.getHeightModifier);
-	  };
-
-	  this.getBottomBoundry = function() {
-	    return (this.shape.y + this.getHeightModifier);
-	  };
-
-	  this.getCurrentX = function() {
-	    return (this.shape.x);
-	  };
-
-	  this.getCurrentY = function() {
-	    return (this.shape.y);
-	  };
-
-	  this.explode = function() {
-	    this.isExpired = true;
-	    var explosion = Explosion.create(this.getCurrentX(), this.getCurrentY());
-	    explosion.draw();
-	    return explosion;
-	  };
-
 	}
 
-	function ProjectileFactory() {
-
-	  this.getProjectile = function(type, x, y) {
-	    if (type === "laser")
-	      return new Projectile(x, y, Projectiles.LASER);
-	    else if (type === "plasma")
-	      return new Projectile(x, y, Projectiles.PLASMA);
-	  };
-	}
-
-	module.exports = new ProjectileFactory();
-
-
-/***/ },
-/* 11 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var ProjectileFactory = __webpack_require__(10);
-
-	function WeaponsSystem() {
-
-	  this.activeProjectile = "laser";
-	  this.availableProjectileTypes = ["laser"];
-
-	  this.fire = function(x, y) {
-	    var projectile = ProjectileFactory.getProjectile(this.activeProjectile, x, y);
-	    projectile.draw();
-	    return projectile;
-	  };
-	}
-
-	function WeaponsSystemFactory() {
+	function PauseScreenFactory() {
 	  this.create = function() {
-	    return new WeaponsSystem();
+	    return new PauseScreen();
 	  };
 	}
 
-	module.exports = new WeaponsSystemFactory();
+	module.exports = new PauseScreenFactory();
 
 
 /***/ }

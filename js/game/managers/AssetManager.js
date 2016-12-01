@@ -49,7 +49,7 @@ function AssetManager() {
     this._removeExpiredProjectiles(this.stage);
     this._removeExpiredExplosions(this.stage);
 
-    this.stage.update();
+    // this.stage.update();
   };
 
   this.getPlayerHealth = function() {

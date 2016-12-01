@@ -1,17 +1,25 @@
 var Spaceship = require('./objects/Spaceship');
 var AssetManager = require('./managers/AssetManager');
+var PauseScreen = require('./objects/PauseScreen');
 
 function Game() {
 
   this.isPaused = false;
+  this.stage = null;
+
   this.assetManager = AssetManager.create();
+  this.pauseScreen = PauseScreen.create();
 
   this.healthId = "health";
 
+  // this.pauseScreen = null;
+  // this.pauseText = null;
+  // this.switchText = null;
+
   this.init = function(gameCanvasId) {
-    var stage = new createjs.Stage(gameCanvasId);
-    stage.addEventListener("click", this._fire.bind(this));
-    this.assetManager.init(stage, 8, 90);
+    this.stage = new createjs.Stage(gameCanvasId);
+    this.stage.addEventListener("click", this._fire.bind(this));
+    this.assetManager.init(this.stage, 8, 90);
     this._configureTicker();
   };
 
@@ -20,10 +28,18 @@ function Game() {
       this.assetManager.updateAssets();
       this._updateHealth();
     }
+    this.stage.update();
   };
 
   this.togglePause = function() {
     this.isPaused = !this.isPaused;
+    if (this.isPaused) {
+      // probably should pass it some config data or at least the space ship
+      this.pauseScreen.init(this.stage);
+    } else {
+      var selectedweapon = this.pauseScreen.tearDown(this.stage);
+      this.assetManager.player1.switchWeapon(selectedweapon);
+    }
   };
 
   this._configureTicker = function() {
@@ -36,6 +52,11 @@ function Game() {
     if (!this.isPaused) {
       this.assetManager.firePlayer1();
     }
+  };
+
+  this._switchWeapon = function() {
+    console.log("BOOM");
+    this.assetManager.player1.switchWeapon();
   };
 
   this._updateHealth = function() {
