@@ -63,7 +63,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var Spaceship = __webpack_require__(2);
-	var AssetManager = __webpack_require__(7);
+	var AssetManager = __webpack_require__(6);
 
 	function Game() {
 
@@ -121,8 +121,8 @@
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Laser = __webpack_require__(3);
-	var NavigationSystem = __webpack_require__(5);
+	var NavigationSystem = __webpack_require__(3);
+	var WeaponsSystem = __webpack_require__(11);
 
 	function SpaceShip(imagePath) {
 
@@ -130,6 +130,7 @@
 	  this.health = 100;
 
 	  this.navigationSystem = NavigationSystem.create();
+	  this.weaponsSystem = WeaponsSystem.create();
 
 	  // visual attributes
 	  this.spriteSheet = new createjs.SpriteSheet({
@@ -225,9 +226,7 @@
 	  };
 
 	  this.fire = function() {
-	    var laser = Laser.create(this.getCurrentX(), this.getCurrentY() - this.radius);
-	    laser.draw();
-	    return laser;
+	    return this.weaponsSystem.fire(this.getCurrentX(), this.getCurrentY() - this.radius);
 	  };
 
 	  this.takeDamage = function(amount) {
@@ -253,120 +252,7 @@
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Explosion = __webpack_require__(4);
-
-	function Laser(startingX, startingY) {
-
-	  this.damage = 20;
-
-	  this.rectangle = new createjs.Shape();
-	  this.startingX = startingX;
-	  this.startingY = startingY;
-	  this.height = 12;
-	  this.width = 6;
-	  this.speed = 5;
-	  this.isFriendly = true;
-	  this.isExpired = false;
-
-	  this.draw = function() {
-	    this.rectangle.graphics.beginFill("yellow").drawRect(this.startingX, this.startingY, this.width, this.height);
-	  };
-
-	  this.getSelf = function() {
-	    return this.rectangle;
-	  };
-
-	  this.move = function() {
-	    if (this.isFriendly)
-	      this.rectangle.y = this.rectangle.y - this.speed;
-	    else
-	      this.rectangle.y = this.rectangle.y + this.speed;
-	  };
-
-	  this.getTopBoundry = function() {
-	    // PLUS OR MINUS?
-	    return (this.rectangle.y + this.startingY - (this.height / 2));
-	  };
-
-	  this.getBottomBoundry = function() {
-	    return (this.rectangle.y + this.startingY + (this.height / 2));
-	  };
-
-	  this.getCurrentX = function() {
-	    return (this.rectangle.x + this.startingX);
-	  };
-
-	  this.getCurrentY = function() {
-	    return (this.rectangle.y + this.startingY);
-	  };
-
-	  this.explode = function() {
-	    this.isExpired = true;
-	    var explosion = Explosion.create(this.getCurrentX(), this.getCurrentY());
-	    explosion.draw();
-	    return explosion;
-	  };
-
-	}
-
-	function LaserFactory() {
-	  this.create = function(startingX, startingY) {
-	    return new Laser(startingX, startingY);
-	  };
-	}
-
-	module.exports = new LaserFactory();
-
-
-/***/ },
-/* 4 */
-/***/ function(module, exports) {
-
-	function Explostion(startingX, startingY) {
-
-	  this.triangle = new createjs.Shape();
-	  this.startingX = startingX;
-	  this.startingY = startingY;
-
-	  this.radius = 35;
-	  this.noOfPoints = 7;
-	  this.pointSize = 0.5;
-	  this.angle = -90;
-
-	  this.isExpired = false;
-
-	  this.draw = function() {
-	    this.triangle.graphics.beginFill("#ff9933").drawPolyStar(this.startingX, this.startingY, this.radius, this.noOfPoints, this.pointSize, this.angle);
-	  };
-
-	  this.getSelf = function() {
-	    return this.triangle;
-	  };
-
-	  this.explode = function() {
-	    this.radius = this.radius + 5;
-	    this.angle = this.angle - 20;
-	    this.draw();
-	    if (this.radius > 60) {
-	      this.isExpired = true;
-	    }
-	  };
-	}
-
-	function ExplosionFactory() {
-	  this.create = function(startingX, startingY) {
-	    return new Explostion(startingX, startingY);
-	  };
-	}
-
-	module.exports = new ExplosionFactory();
-
-
-/***/ },
-/* 5 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var NumberUtility = __webpack_require__(6);
+	var NumberUtility = __webpack_require__(4);
 
 	function NavigationSystem() {
 
@@ -414,7 +300,7 @@
 
 
 /***/ },
-/* 6 */
+/* 4 */
 /***/ function(module, exports) {
 
 	function NumberUtility() {
@@ -430,12 +316,13 @@
 
 
 /***/ },
-/* 7 */
+/* 5 */,
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var NumberUtility = __webpack_require__(6);
+	var NumberUtility = __webpack_require__(4);
 	var Spaceship = __webpack_require__(2);
-	var TrafficController = __webpack_require__(8);
+	var TrafficController = __webpack_require__(7);
 
 	function AssetManager() {
 
@@ -662,7 +549,7 @@
 
 
 /***/ },
-/* 8 */
+/* 7 */
 /***/ function(module, exports) {
 
 	
@@ -727,6 +614,191 @@
 
 	var trafficController = new TrafficController();
 	module.exports = trafficController;
+
+
+/***/ },
+/* 8 */,
+/* 9 */
+/***/ function(module, exports) {
+
+	function Explostion(startingX, startingY) {
+
+	  this.triangle = new createjs.Shape();
+	  this.startingX = startingX;
+	  this.startingY = startingY;
+
+	  this.radius = 35;
+	  this.noOfPoints = 7;
+	  this.pointSize = 0.5;
+	  this.angle = -90;
+
+	  this.isExpired = false;
+
+	  this.draw = function() {
+	    this.triangle.graphics.beginFill("#ff9933").drawPolyStar(this.startingX, this.startingY, this.radius, this.noOfPoints, this.pointSize, this.angle);
+	  };
+
+	  this.getSelf = function() {
+	    return this.triangle;
+	  };
+
+	  this.explode = function() {
+	    this.radius = this.radius + 5;
+	    this.angle = this.angle - 20;
+	    this.draw();
+	    if (this.radius > 60) {
+	      this.isExpired = true;
+	    }
+	  };
+	}
+
+	function ExplosionFactory() {
+	  this.create = function(startingX, startingY) {
+	    return new Explostion(startingX, startingY);
+	  };
+	}
+
+	module.exports = new ExplosionFactory();
+
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Explosion = __webpack_require__(9);
+
+	var Projectiles = {
+	  LASER: {
+	    speed: 5,
+	    damage: 20,
+	    height: 12,
+	    width: 6,
+	    color: "yellow",
+	    getShape: function(x, y) {
+	      var rectangle = new createjs.Shape();
+	      rectangle.graphics.beginFill(this.color).drawRect(0, 0, this.width, this.height);
+	      rectangle.x = x;
+	      rectangle.y = y;
+	      return rectangle;
+	    },
+	    getHeightModifier: function() {
+	      return this.height / 2;
+	    }
+	  },
+	  PLASMA: {
+	    speed: 10,
+	    damage: 40,
+	    radius: 50,
+	    color: "#0F0",
+	    getShape: function(x, y) {
+	      var circle = new createjs.Shape();
+	      circle.graphics.beginFill(this.color).drawCircle(0, 0, 10);
+	      circle.x = x;
+	      circle.y = y;
+	      return circle;
+	    },
+	    getHeightModifier: function() {
+	      return this.radius;
+	    }
+	  }
+	};
+
+	function Projectile(startingX, startingY, config) {
+
+	  this.shape = null;
+
+	  this.damage = config.damage;
+	  this.speed = config.speed;
+	  this.color = config.color;
+	  this.getShape = config.getShape;
+	  this.getHeightModifier = config.getHeightModifier;
+
+	  this.startingX = startingX;
+	  this.startingY = startingY;
+	  this.height = 12;
+	  this.width = 6;
+	  this.isFriendly = true;
+	  this.isExpired = false;
+
+	  this.draw = function() {
+	    this.shape = this.getShape(this.startingX, this.startingY);
+	  };
+
+	  this.getSelf = function() {
+	    return this.shape;
+	  };
+
+	  this.move = function() {
+	    if (this.isFriendly)
+	      this.shape.y = this.shape.y - this.speed;
+	    else
+	      this.shape.y = this.shape.y + this.speed;
+	  };
+
+	  this.getTopBoundry = function() {
+	    // PLUS OR MINUS?
+	    return (this.shape.y - this.getHeightModifier);
+	  };
+
+	  this.getBottomBoundry = function() {
+	    return (this.shape.y + this.getHeightModifier);
+	  };
+
+	  this.getCurrentX = function() {
+	    return (this.shape.x);
+	  };
+
+	  this.getCurrentY = function() {
+	    return (this.shape.y);
+	  };
+
+	  this.explode = function() {
+	    this.isExpired = true;
+	    var explosion = Explosion.create(this.getCurrentX(), this.getCurrentY());
+	    explosion.draw();
+	    return explosion;
+	  };
+
+	}
+
+	function ProjectileFactory() {
+
+	  this.getProjectile = function(type, x, y) {
+	    if (type === "laser")
+	      return new Projectile(x, y, Projectiles.LASER);
+	    else if (type === "plasma")
+	      return new Projectile(x, y, Projectiles.PLASMA);
+	  };
+	}
+
+	module.exports = new ProjectileFactory();
+
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var ProjectileFactory = __webpack_require__(10);
+
+	function WeaponsSystem() {
+
+	  this.activeProjectile = "laser";
+	  this.availableProjectileTypes = ["laser"];
+
+	  this.fire = function(x, y) {
+	    var projectile = ProjectileFactory.getProjectile(this.activeProjectile, x, y);
+	    projectile.draw();
+	    return projectile;
+	  };
+	}
+
+	function WeaponsSystemFactory() {
+	  this.create = function() {
+	    return new WeaponsSystem();
+	  };
+	}
+
+	module.exports = new WeaponsSystemFactory();
 
 
 /***/ }

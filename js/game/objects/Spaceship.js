@@ -1,5 +1,5 @@
-var Laser = require('./Laser');
 var NavigationSystem = require('./NavigationSystem');
+var WeaponsSystem = require('./WeaponsSystem');
 
 function SpaceShip(imagePath) {
 
@@ -7,6 +7,7 @@ function SpaceShip(imagePath) {
   this.health = 100;
 
   this.navigationSystem = NavigationSystem.create();
+  this.weaponsSystem = WeaponsSystem.create();
 
   // visual attributes
   this.spriteSheet = new createjs.SpriteSheet({
@@ -102,9 +103,7 @@ function SpaceShip(imagePath) {
   };
 
   this.fire = function() {
-    var laser = Laser.create(this.getCurrentX(), this.getCurrentY() - this.radius);
-    laser.draw();
-    return laser;
+    return this.weaponsSystem.fire(this.getCurrentX(), this.getCurrentY() - this.radius);
   };
 
   this.takeDamage = function(amount) {
