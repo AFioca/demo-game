@@ -7,7 +7,7 @@ function NavigationSystemFactory() {
 
   this.NavigationSystem = function() {
     this.directions = ["up", "down", "left", "right"];
-    this.direction = "right"; // For now, up, down, right, left
+    this.direction = this.directions[NumberUtility.getRandomNumberBetween(0, 3)]; // For now, up, down, right, left
     this.maxPersistance = 120;
     this.persistanceCount = NumberUtility.getRandomNumberBetween(1, this.maxPersistance); // random number
     this.persistanceAttempts = 0;

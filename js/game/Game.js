@@ -21,7 +21,6 @@ function Game() {
   this.tick = function() {
     if (!this.isPaused) {
       this.assetManager.updateAssets();
-      // this._updateHealth();
     }
     this.stage.update();
   };

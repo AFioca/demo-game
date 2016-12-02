@@ -67,6 +67,9 @@
 	  });
 
 	  $("#reset").click(function() {
+	    game.noOfEnemies = $("#number-enemies").val();
+	    game.enemyAttackFrequency = $("#attack-speed").val();
+	    console.log(game.noOfEnemies);
 	    game.reset();
 	  });
 
@@ -90,8 +93,6 @@
 
 	  this.assetManager = AssetManager.create();
 
-	  // this.healthId = "health";
-
 	  // create config object?
 	  this.noOfEnemies = 6;
 	  this.enemyAttackFrequency = 90;
@@ -106,7 +107,6 @@
 	  this.tick = function() {
 	    if (!this.isPaused) {
 	      this.assetManager.updateAssets();
-	      // this._updateHealth();
 	    }
 	    this.stage.update();
 	  };
@@ -144,9 +144,6 @@
 	    }
 	  };
 
-	  // this._updateHealth = function() {
-	  //   document.getElementById(this.healthId).innerHTML = this.assetManager.getPlayerHealth();
-	  // };
 	}
 
 	function GameFactory() {
@@ -164,7 +161,7 @@
 
 	var NumberUtility = __webpack_require__(3);
 	var ShipFactory = __webpack_require__(4);
-	var TrafficController = __webpack_require__(5);
+	var TrafficController = __webpack_require__(10);
 
 	function AssetManager() {
 
@@ -246,16 +243,15 @@
 	    var startingY = 80;
 	    for (var i = 0; i < enemyShipCount; i++) {
 	      var enemyShip = ShipFactory.create("/demo-game/img/enemy-spaceship.png");
+	      if (startingX >= this.width + enemyShip.radius) {
+	        startingX = 50;
+	        startingY = startingY + 110;
+	      }
 	      enemyShip.moveToX(startingX);
 	      enemyShip.moveToY(startingY);
 	      enemyShip.reSize(0.8);
 	      this.enemyShips.push(enemyShip);
-	      startingX = startingX + 75;
-	      if (startingY > 100) {
-	        startingY = startingY - 110;
-	      } else {
-	        startingY = startingY + 110;
-	      }
+	      startingX = startingX + 100;
 	    }
 	  };
 
@@ -412,8 +408,8 @@
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var NavigationSystem = __webpack_require__(6);
-	var WeaponsSystem = __webpack_require__(7);
+	var NavigationSystem = __webpack_require__(5);
+	var WeaponsSystem = __webpack_require__(6);
 
 	function ShipFactory() {
 
@@ -549,86 +545,6 @@
 
 /***/ },
 /* 5 */
-/***/ function(module, exports) {
-
-	
-	function TrafficController() {
-
-	  this.pathIsClear = function(ship, ships, projectiles, height, width) {
-	    return !(this._willCollideWithBorder(ship, height, width) ||
-	             this._willCollideWithShips(ship, ships) ||
-	             this._willCollideWithProjectiles(ship, projectiles));
-	  };
-
-	  this._willCollideWithProjectiles = function(ship, projectiles) {
-	    var direction = ship.getDirection();
-	    var willCollide = false;
-	    for (var n = 0; n < projectiles.length; n++) {
-	      if (direction === "right" && ship.collidesWithCoordinates(projectiles[n].getCurrentX() - 1)) {
-	        willCollide = true;
-	      } else if (direction === "left" && ship.collidesWithCoordinates(projectiles[n].getCurrentX() + 1)) {
-	        willCollide = true;
-	      } else if (direction === "up" && ship.collidesWithCoordinates(projectiles[n].getCurrentY() + 1)) {
-	        willCollide = true;
-	      } else if (direction === "down" && ship.collidesWithCoordinates(projectiles[n].getCurrentY() - 1)) {
-	        willCollide = true;
-	      }
-	    }
-	    return willCollide;
-	  };
-
-	  this._willCollideWithBorder = function(ship, height, width) {
-	    var direction = ship.getDirection();
-	    var willCollide = false;
-	    if (direction === "right" && (ship.getRightBoundry() + 1) > width) {
-	      willCollide = true;
-	    } else if (direction === "left" && (ship.getLeftBoundry() - 1) < 0) {
-	      willCollide = true;
-	    } else if (direction === "up" && (ship.getTopBoundry() - 1) < 0) {
-	      willCollide = true;
-	    } else if (direction === "down" && (ship.getTopBoundry() + 1) > height) {
-	      willCollide = true;
-	    }
-	    return willCollide;
-	  };
-
-	  this._willCollideWithShips = function(ship, ships) {
-	    // I'm sure there's a cleaner way, but this works so I'm leaving it for now.
-	    var direction = ship.getDirection();
-	    var willCollide = false;
-	    for (var n = 0; n < ships.length; n++) {
-	      if (direction === "right" && (
-	          ships[n].collidesWithCoordinates(ship.getRightBoundry() + 1, ship.getCurrentY()) ||
-	          ships[n].collidesWithCoordinates(ship.getRightBoundry() + 1, ship.getTopBoundry()) ||
-	          ships[n].collidesWithCoordinates(ship.getRightBoundry() + 1, ship.getBottomBoundry()))) {
-	        willCollide = true;
-	      } else if (direction === "left" && (
-	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry() - 1, ship.getCurrentY()) ||
-	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry() - 1, ship.getTopBoundry()) ||
-	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry() - 1, ship.getBottomBoundry()))) {
-	        willCollide = true;
-	      } else if (direction === "up" && (
-	                 ships[n].collidesWithCoordinates(ship.getCurrentX(), ship.getTopBoundry() - 1) ||
-	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry(), ship.getTopBoundry() - 1) ||
-	                 ships[n].collidesWithCoordinates(ship.getRightBoundry(), ship.getTopBoundry() - 1))) {
-	        willCollide = true;
-	      } else if (direction === "down" && (
-	                 ships[n].collidesWithCoordinates(ship.getCurrentX(), ship.getBottomBoundry() + 1) ||
-	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry(), ship.getBottomBoundry() + 1) ||
-	                 ships[n].collidesWithCoordinates(ship.getRightBoundry(), ship.getBottomBoundry() + 1))) {
-	        willCollide = true;
-	      }
-	    }
-	    return willCollide;
-	  };
-	}
-
-	var trafficController = new TrafficController();
-	module.exports = trafficController;
-
-
-/***/ },
-/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var NumberUtility = __webpack_require__(3);
@@ -640,7 +556,7 @@
 
 	  this.NavigationSystem = function() {
 	    this.directions = ["up", "down", "left", "right"];
-	    this.direction = "right"; // For now, up, down, right, left
+	    this.direction = this.directions[NumberUtility.getRandomNumberBetween(0, 3)]; // For now, up, down, right, left
 	    this.maxPersistance = 120;
 	    this.persistanceCount = NumberUtility.getRandomNumberBetween(1, this.maxPersistance); // random number
 	    this.persistanceAttempts = 0;
@@ -678,10 +594,10 @@
 
 
 /***/ },
-/* 7 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var ProjectileFactory = __webpack_require__(8);
+	var ProjectileFactory = __webpack_require__(7);
 
 	function WeaponsSystemFactory() {
 	  this.create = function() {
@@ -712,11 +628,11 @@
 
 
 /***/ },
-/* 8 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Projectiles = __webpack_require__(9);
-	var ExplosionFactory = __webpack_require__(10);
+	var Projectiles = __webpack_require__(8);
+	var ExplosionFactory = __webpack_require__(9);
 
 	function ProjectileFactory() {
 
@@ -793,7 +709,7 @@
 
 
 /***/ },
-/* 9 */
+/* 8 */
 /***/ function(module, exports) {
 
 	var Projectiles = {
@@ -855,7 +771,7 @@
 
 
 /***/ },
-/* 10 */
+/* 9 */
 /***/ function(module, exports) {
 
 	function ExplosionFactory() {
@@ -897,6 +813,86 @@
 	}
 
 	module.exports = new ExplosionFactory();
+
+
+/***/ },
+/* 10 */
+/***/ function(module, exports) {
+
+	
+	function TrafficController() {
+
+	  this.pathIsClear = function(ship, ships, projectiles, height, width) {
+	    return !(this._willCollideWithBorder(ship, height, width) ||
+	             this._willCollideWithShips(ship, ships) ||
+	             this._willCollideWithProjectiles(ship, projectiles));
+	  };
+
+	  this._willCollideWithProjectiles = function(ship, projectiles) {
+	    var direction = ship.getDirection();
+	    var willCollide = false;
+	    for (var n = 0; n < projectiles.length; n++) {
+	      if (direction === "right" && ship.collidesWithCoordinates(projectiles[n].getCurrentX() - 1)) {
+	        willCollide = true;
+	      } else if (direction === "left" && ship.collidesWithCoordinates(projectiles[n].getCurrentX() + 1)) {
+	        willCollide = true;
+	      } else if (direction === "up" && ship.collidesWithCoordinates(projectiles[n].getCurrentY() + 1)) {
+	        willCollide = true;
+	      } else if (direction === "down" && ship.collidesWithCoordinates(projectiles[n].getCurrentY() - 1)) {
+	        willCollide = true;
+	      }
+	    }
+	    return willCollide;
+	  };
+
+	  this._willCollideWithBorder = function(ship, height, width) {
+	    var direction = ship.getDirection();
+	    var willCollide = false;
+	    if (direction === "right" && (ship.getRightBoundry() + 1) > width) {
+	      willCollide = true;
+	    } else if (direction === "left" && (ship.getLeftBoundry() - 1) < 0) {
+	      willCollide = true;
+	    } else if (direction === "up" && (ship.getTopBoundry() - 1) < 0) {
+	      willCollide = true;
+	    } else if (direction === "down" && (ship.getTopBoundry() + 1) > height) {
+	      willCollide = true;
+	    }
+	    return willCollide;
+	  };
+
+	  this._willCollideWithShips = function(ship, ships) {
+	    // I'm sure there's a cleaner way, but this works so I'm leaving it for now.
+	    var direction = ship.getDirection();
+	    var willCollide = false;
+	    for (var n = 0; n < ships.length; n++) {
+	      if (direction === "right" && (
+	          ships[n].collidesWithCoordinates(ship.getRightBoundry() + 1, ship.getCurrentY()) ||
+	          ships[n].collidesWithCoordinates(ship.getRightBoundry() + 1, ship.getTopBoundry()) ||
+	          ships[n].collidesWithCoordinates(ship.getRightBoundry() + 1, ship.getBottomBoundry()))) {
+	        willCollide = true;
+	      } else if (direction === "left" && (
+	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry() - 1, ship.getCurrentY()) ||
+	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry() - 1, ship.getTopBoundry()) ||
+	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry() - 1, ship.getBottomBoundry()))) {
+	        willCollide = true;
+	      } else if (direction === "up" && (
+	                 ships[n].collidesWithCoordinates(ship.getCurrentX(), ship.getTopBoundry() - 1) ||
+	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry(), ship.getTopBoundry() - 1) ||
+	                 ships[n].collidesWithCoordinates(ship.getRightBoundry(), ship.getTopBoundry() - 1))) {
+	        willCollide = true;
+	      } else if (direction === "down" && (
+	                 ships[n].collidesWithCoordinates(ship.getCurrentX(), ship.getBottomBoundry() + 1) ||
+	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry(), ship.getBottomBoundry() + 1) ||
+	                 ships[n].collidesWithCoordinates(ship.getRightBoundry(), ship.getBottomBoundry() + 1))) {
+	        willCollide = true;
+	      }
+	    }
+	    return willCollide;
+	  };
+	}
+
+	var trafficController = new TrafficController();
+	module.exports = trafficController;
 
 
 /***/ }

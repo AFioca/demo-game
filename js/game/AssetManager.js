@@ -82,16 +82,15 @@ function AssetManager() {
     var startingY = 80;
     for (var i = 0; i < enemyShipCount; i++) {
       var enemyShip = ShipFactory.create("/demo-game/img/enemy-spaceship.png");
+      if (startingX >= this.width + enemyShip.radius) {
+        startingX = 50;
+        startingY = startingY + 110;
+      }
       enemyShip.moveToX(startingX);
       enemyShip.moveToY(startingY);
       enemyShip.reSize(0.8);
       this.enemyShips.push(enemyShip);
-      startingX = startingX + 75;
-      if (startingY > 100) {
-        startingY = startingY - 110;
-      } else {
-        startingY = startingY + 110;
-      }
+      startingX = startingX + 100;
     }
   };
 
