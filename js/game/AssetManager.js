@@ -1,6 +1,6 @@
-var NumberUtility = require('../NumberUtility');
-var Spaceship = require('../objects/Spaceship');
-var TrafficController = require('../controllers/TrafficController');
+var NumberUtility = require('./NumberUtility');
+var ShipFactory = require('./factory/ShipFactory');
+var TrafficController = require('./controllers/TrafficController');
 
 function AssetManager() {
 
@@ -11,7 +11,7 @@ function AssetManager() {
   this.backgroundImage1 = new createjs.Bitmap("/demo-game/img/space-background.png");
   this.backgroundImage2 = new createjs.Bitmap("/demo-game/img/space-background.png");
 
-  this.player1 = Spaceship.create("/demo-game/img/spaceship.png");
+  this.player1 = ShipFactory.create("/demo-game/img/spaceship.png");
   this.projectiles = [];
   this.explosions = [];
   this.enemyShips = [];
@@ -59,9 +59,10 @@ function AssetManager() {
   /** PRIVATE METHODS **/
 
   this._setupAssets = function(enemyShipCount) {
-    this.backgroundImage2.y = -this.height;
+    this.backgroundImage2.y = -this.height + 1;
     this.player1.moveToX(this.width/2);
     this.player1.moveToY(this.height-100);
+    this.player1.reSize(0.8);
     this._createEnemyShips(enemyShipCount);
   };
 
@@ -80,9 +81,10 @@ function AssetManager() {
     var startingX = 50;
     var startingY = 80;
     for (var i = 0; i < enemyShipCount; i++) {
-      var enemyShip = Spaceship.create("/demo-game/img/enemy-spaceship.png");
+      var enemyShip = ShipFactory.create("/demo-game/img/enemy-spaceship.png");
       enemyShip.moveToX(startingX);
       enemyShip.moveToY(startingY);
+      enemyShip.reSize(0.8);
       this.enemyShips.push(enemyShip);
       startingX = startingX + 75;
       if (startingY > 100) {
@@ -178,20 +180,21 @@ function AssetManager() {
   };
 
   this._fireEnemyShip = function(stage) {
-    var randomIndex = NumberUtility.getRandomNumberBetween(this.enemyShips.length - 1, 0);
-    console.log(randomIndex);
-    var projectile = this.enemyShips[randomIndex].fire();
-    projectile.isFriendly = false;
-    this.projectiles.push(projectile);
-    stage.addChild(projectile.getSelf());
+    if (this.enemyShips.length > 0) {
+      var randomIndex = NumberUtility.getRandomNumberBetween(this.enemyShips.length - 1, 0);
+      var projectile = this.enemyShips[randomIndex].fire();
+      projectile.isFriendly = false;
+      this.projectiles.push(projectile);
+      stage.addChild(projectile.getSelf());
+    }
   };
 
   this._moveBackground = function() {
     if (this.backgroundImage1.y > this.height) {
-      this.backgroundImage1.y = -this.height;
+      this.backgroundImage1.y = -this.height + 1;
     }
     if (this.backgroundImage2.y > this.height) {
-      this.backgroundImage2.y = -this.height;
+      this.backgroundImage2.y = -this.height + 1;
     }
     this.backgroundImage1.y = this.backgroundImage1.y + 0.5;
     this.backgroundImage2.y = this.backgroundImage2.y + 0.5;
@@ -201,7 +204,6 @@ function AssetManager() {
     for (var i = 0; i < this.enemyShips.length; i++) {
       var enemyShip = this.enemyShips[i];
       if (enemyShip.collidesWithCoordinates(projectile.getCurrentX(), projectile.getCurrentY())) {
-        console.log("collides with enemy ship");
         this._handleCollision(projectile, enemyShip, stage);
         // want to avoid colliding with multiple ships for now
         break;

@@ -1,0 +1,18 @@
+#game-canvas {
+    background-color: black;
+}
+
+
+#control-panel {
+    padding-top: 25px;
+}
+
+#game-controls {
+    text-align: center;
+}
+
+#control-panel .lead {
+    padding: 10px 0px;
+    text-align: center;
+    border-bottom: 1px solid gray;
+}

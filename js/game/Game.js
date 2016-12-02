@@ -1,6 +1,4 @@
-var Spaceship = require('./objects/Spaceship');
-var AssetManager = require('./managers/AssetManager');
-var PauseScreen = require('./objects/PauseScreen');
+var AssetManager = require('./AssetManager');
 
 function Game() {
 
@@ -8,34 +6,47 @@ function Game() {
   this.stage = null;
 
   this.assetManager = AssetManager.create();
-  this.pauseScreen = PauseScreen.create();
 
-  this.healthId = "health";
+  // this.healthId = "health";
+
+  // create config object?
+  this.noOfEnemies = 6;
+  this.enemyAttackFrequency = 90;
 
   this.init = function(gameCanvasId) {
     this.stage = new createjs.Stage(gameCanvasId);
     this.stage.addEventListener("click", this._fire.bind(this));
-    this.assetManager.init(this.stage, 8, 90);
+    this.assetManager.init(this.stage, this.noOfEnemies, this.enemyAttackFrequency);
     this._configureTicker();
   };
 
   this.tick = function() {
     if (!this.isPaused) {
       this.assetManager.updateAssets();
-      this._updateHealth();
+      // this._updateHealth();
     }
     this.stage.update();
   };
 
   this.togglePause = function() {
     this.isPaused = !this.isPaused;
-    if (this.isPaused) {
-      // probably should pass it some config data or at least the space ship
-      this.pauseScreen.init(this.stage);
-    } else {
-      var selectedweapon = this.pauseScreen.tearDown(this.stage);
-      this.assetManager.player1.switchWeapon(selectedweapon);
-    }
+  };
+
+  this.getAvailableProjectiles = function() {
+    return this.assetManager.player1.weaponsSystem.getAvailableProjectiles();
+  };
+
+  this.switchProjectile = function(type) {
+    this.assetManager.player1.switchWeapon(type);
+  };
+
+  this.reset = function() {
+    this.isPaused = true;
+    this.stage.clear();
+    this.stage.removeAllChildren();
+    this.assetManager = AssetManager.create();
+    this.assetManager.init(this.stage, this.noOfEnemies, this.enemyAttackFrequency);
+    this.isPaused = false;
   };
 
   this._configureTicker = function() {
@@ -50,10 +61,9 @@ function Game() {
     }
   };
 
-  this._updateHealth = function() {
-    document.getElementById(this.healthId).innerHTML = this.assetManager.getPlayerHealth();
-  };
-
+  // this._updateHealth = function() {
+  //   document.getElementById(this.healthId).innerHTML = this.assetManager.getPlayerHealth();
+  // };
 }
 
 function GameFactory() {
