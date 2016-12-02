@@ -11,7 +11,7 @@ function AssetManager() {
   this.backgroundImage1 = new createjs.Bitmap("/demo-game/img/space-background.png");
   this.backgroundImage2 = new createjs.Bitmap("/demo-game/img/space-background.png");
 
-  this.player1 = ShipFactory.create("/demo-game/img/spaceship.png");
+  this.player1 = ShipFactory.createPlayerShip();
   this.projectiles = [];
   this.explosions = [];
   this.enemyShips = [];
@@ -29,16 +29,13 @@ function AssetManager() {
   };
 
   this.firePlayer1 = function() {
-    if (this.stage.mouseInBounds) {
-      var laser = this.player1.fire();
-      this.projectiles.push(laser);
-      this.stage.addChild(laser.getSelf());
-    }
+    var laser = this.player1.fire();
+    this.projectiles.push(laser);
+    this.stage.addChild(laser.getSelf());
   };
 
   this.updateAssets = function() {
     this._moveBackground();
-    this._movePlayerShip();
     this._moveEnemyShips();
     this._attackWithEnemyShips(this.stage);
     this._moveProjectiles();
@@ -81,7 +78,7 @@ function AssetManager() {
     var startingX = 50;
     var startingY = 80;
     for (var i = 0; i < enemyShipCount; i++) {
-      var enemyShip = ShipFactory.create("/demo-game/img/enemy-spaceship.png");
+      var enemyShip = ShipFactory.createDroneShip();
       if (startingX >= this.width + enemyShip.radius) {
         startingX = 50;
         startingY = startingY + 110;
@@ -91,13 +88,6 @@ function AssetManager() {
       enemyShip.reSize(0.8);
       this.enemyShips.push(enemyShip);
       startingX = startingX + 100;
-    }
-  };
-
-  this._movePlayerShip = function() {
-    if (this.stage.mouseInBounds) {
-      this.player1.moveToX(this.stage.mouseX);
-      this.player1.moveToY(this.stage.mouseY);
     }
   };
 

@@ -1,57 +1,73 @@
 var NavigationSystem = require('./NavigationSystemFactory');
 var WeaponsSystem = require('./WeaponsSystemFactory');
+var Ships = require('../config/Ships');
 
 function ShipFactory() {
 
-  this.create = function(image) {
-    return new this.SpaceShip(image);
+  this.createPlayerShip = function() {
+    return new this.SpaceShip(Ships.PLAYER);
   };
 
-  this.SpaceShip = function(imagePath) {
+  this.createDroneShip = function() {
+    return new this.SpaceShip(Ships.DRONE);
+  };
 
-    this.health = 100;
+  this.SpaceShip = function(config) {
+
+    this.health = config.health;
+    this.speed = config.speed;
     this.navigationSystem = NavigationSystem.create();
-    this.weaponsSystem = WeaponsSystem.create();
+    this.weaponsSystem = WeaponsSystem.create(config.availableProjectiles);
 
-    this.spriteSheet = new createjs.SpriteSheet({
-      images: [imagePath],
-      frames: {width:100, height:100, regX: 50, regY: 50},
-      animations: {
-        default: {
-          frames: [0, 1],
-          speed: 0.1
-        },
-        damaged: {
-          frames: [2, 3],
-          speed: 0.1
-        }
-      }
-    });
-    this.sprite = new createjs.Sprite(this.spriteSheet, "default");
-    this.radius = 50;
+    this.spriteSheet = config.sprite;
+    this.sprite = new createjs.Sprite(config.spriteSheet, "default");
+    this.widthModifier = config.widthModifier;
+    this.heightModifier = config.heightModifier;
 
     this.getSelf = function() {
       return this.sprite;
     };
 
-    this.move = function() {
-      var direction = this.navigationSystem.direction;
-      if (direction === "right") {
-        this.moveSpaces(1, 0);
-      } else if (direction === "left") {
-        this.moveSpaces(-1, 0);
-      } else if (direction === "up") {
-        this.moveSpaces(0, -1);
-      } else if (direction === "down") {
-        this.moveSpaces(0, 1);
+    this.move = function(dir) {
+      var direction;
+      if (dir) {
+        direction = dir;
+      } else {
+        direction = this.navigationSystem.direction;
       }
+      if (direction === "right") {
+        this.moveRight();
+      } else if (direction === "left") {
+        this.moveLeft();
+      } else if (direction === "up") {
+        this.moveUp();
+      } else if (direction === "down") {
+        this.moveDown();
+      }
+    };
+
+    this.moveUp = function() {
+      this.moveSpaces(0, -this.speed);
+    };
+
+    this.moveRight = function() {
+      this.moveSpaces(this.speed, 0);
+    };
+
+    this.moveDown = function() {
+      this.moveSpaces(0, this.speed);
+    };
+
+    this.moveLeft = function() {
+      this.moveSpaces(-this.speed, 0);
     };
 
     this.reSize = function(size) {
       // Default is 1, to scale down use a decimal ie. 0.8
       this.sprite.scaleX = size;
       this.sprite.scaleY = size;
-      this.radius = this.radius * Math.abs(size);
+      this.widthModifier = this.widthModifier * Math.abs(size);
+      this.heightModifier = this.heightModifier * Math.abs(size);
       this.sprite.regX = this.sprite.regX * Math.abs(size);
       this.sprite.regY = this.sprite.regY * Math.abs(size);
     };
@@ -90,19 +106,19 @@ function ShipFactory() {
     };
 
     this.getLeftBoundry = function() {
-      return (this.sprite.x - this.radius);
+      return (this.sprite.x - this.widthModifier);
     };
 
     this.getRightBoundry = function() {
-      return (this.sprite.x + this.radius);
+      return (this.sprite.x + this.widthModifier);
     };
 
     this.getTopBoundry = function() {
-      return (this.sprite.y - this.radius);
+      return (this.sprite.y - this.heightModifier);
     };
 
     this.getBottomBoundry = function() {
-      return (this.sprite.y + this.radius);
+      return (this.sprite.y + this.heightModifier);
     };
 
     this.moveToX = function (x) {
@@ -114,7 +130,7 @@ function ShipFactory() {
     };
 
     this.fire = function() {
-      return this.weaponsSystem.fire(this.getCurrentX(), this.getCurrentY() - this.radius);
+      return this.weaponsSystem.fire(this.getCurrentX(), this.getCurrentY() - this.heightModifier);
     };
 
     this.switchWeapon = function(type) {

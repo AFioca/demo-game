@@ -1,18 +1,12 @@
-var Projectiles = require('../config/Projectiles');
 var ExplosionFactory = require('./ExplosionFactory');
 
 function ProjectileFactory() {
 
-  this.getProjectile = function(type, x, y) {
-    if (type === "laser")
-      return new this.Projectile(x, y, Projectiles.LASER);
-    else if (type === "plasma")
-      return new this.Projectile(x, y, Projectiles.PLASMA);
-    else if (type === "light")
-      return new this.Projectile(x, y, Projectiles.LIGHT);
+  this.createProjectile = function(config, x, y) {
+    return new this.Projectile(config, x, y);
   };
 
-  this.Projectile = function(startingX, startingY, config) {
+  this.Projectile = function(config, startingX, startingY) {
     this.shape = null;
 
     this.damage = config.damage;

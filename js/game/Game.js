@@ -13,7 +13,6 @@ function Game() {
 
   this.init = function(gameCanvasId) {
     this.stage = new createjs.Stage(gameCanvasId);
-    this.stage.addEventListener("click", this._fire.bind(this));
     this.assetManager.init(this.stage, this.noOfEnemies, this.enemyAttackFrequency);
     this._configureTicker();
   };
@@ -21,6 +20,9 @@ function Game() {
   this.tick = function() {
     if (!this.isPaused) {
       this.assetManager.updateAssets();
+      if (this.move) {
+        this.assetManager.player1.move(this.move);
+      }
     }
     this.stage.update();
   };
@@ -46,13 +48,33 @@ function Game() {
     this.isPaused = false;
   };
 
+  this.moveUp = function() {
+    this.move = "up";
+  };
+
+  this.moveRight = function() {
+    this.move = "right";
+  };
+
+  this.moveDown = function() {
+    this.move = "down";
+  };
+
+  this.moveLeft = function() {
+    this.move = "left";
+  };
+
+  this.clearMove = function() {
+    this.move = null;
+  };
+
   this._configureTicker = function() {
     createjs.Ticker.useRAF = true; // not sure what this does yt
     createjs.Ticker.setFPS(60);
     createjs.Ticker.addEventListener("tick", this.tick.bind(this));
   };
 
-  this._fire = function() {
+  this.fire = function() {
     if (!this.isPaused) {
       this.assetManager.firePlayer1();
     }

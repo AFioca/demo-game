@@ -8,10 +8,10 @@ $( document ).ready(function() {
   var projectileChoices = game.getAvailableProjectiles();
   var choicesDiv = $('#projectiles');
   for (var i = 0; i < projectileChoices.length; i++) {
-    if (projectileChoices[i] === "laser") {
-      choicesDiv.append("<li><input type='radio' name='projectiles' checked value='" + projectileChoices[i] + "' /> " + projectileChoices[i] + "</li>");
+    if (projectileChoices[i].name === "laser") {
+      choicesDiv.append("<li><input type='radio' name='projectiles' checked value='" + projectileChoices[i].name + "' /> " + projectileChoices[i].name + "</li>");
     } else {
-      choicesDiv.append("<li><input type='radio' name='projectiles' value='" + projectileChoices[i] + "' /> " + projectileChoices[i] + "</li>");
+      choicesDiv.append("<li><input type='radio' name='projectiles' value='" + projectileChoices[i].name + "' /> " + projectileChoices[i].name + "</li>");
     }
   }
 
@@ -31,4 +31,35 @@ $( document ).ready(function() {
     game.switchProjectile(this.value);
   });
 
+  $( document ).keydown(function(event) {
+
+    switch (event.keyCode) {
+      case 37:
+        event.preventDefault();
+        game.moveLeft();
+        break;
+      case 38:
+        event.preventDefault();
+        game.moveUp();
+        break;
+      case 39:
+        event.preventDefault();
+        game.moveRight();
+        break;
+      case 40:
+        event.preventDefault();
+        game.moveDown();
+        break;
+      case 32:
+        event.preventDefault();
+        game.fire();
+        break;
+    }
+  });
+
+  $( document ).keyup(function(event) {
+    if (event.keyCode != 32) {
+      game.clearMove();
+    }
+  });
 });
