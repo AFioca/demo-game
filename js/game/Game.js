@@ -7,8 +7,6 @@ function Game() {
 
   this.assetManager = AssetManager.create();
 
-  // this.healthId = "health";
-
   // create config object?
   this.noOfEnemies = 6;
   this.enemyAttackFrequency = 90;
@@ -61,9 +59,6 @@ function Game() {
     }
   };
 
-  // this._updateHealth = function() {
-  //   document.getElementById(this.healthId).innerHTML = this.assetManager.getPlayerHealth();
-  // };
 }
 
 function GameFactory() {
