@@ -125,7 +125,6 @@ function AssetManager() {
     for (var i = 0; i < this.projectiles.length; i++) {
       var projectile = this.projectiles[i];
       if (projectile.isFriendly) {
-        console.log("friendly projectile");
         this._handleEnemyCollision(stage, projectile);
       } else if (this.player1.collidesWithCoordinates(projectile.getCurrentX(), projectile.getCurrentY())) {
         this._handleCollision(projectile, this.player1, stage);

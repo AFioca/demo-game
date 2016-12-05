@@ -31,11 +31,7 @@ function WeaponsSystemFactory() {
     this.fire = function(x, y) {
       var shell = [];
       for (var i = 0; i < this.projectileCount; i++) {
-        // console.log(this.projectileCount);
-        // console.log(this.gunModes);
         var n = this.gunModes[this.projectileCount - 1][i];
-        console.log(n);
-        console.log(this.guns);
         this.guns[n].load(this.activeProjectile);
         shell.push(this.guns[n].fire(x, y));
       }
@@ -43,10 +39,7 @@ function WeaponsSystemFactory() {
     };
 
     this.switchWeapon = function(type) {
-      console.log("SWITCH WEAPON");
-      console.log(type);
       for (var i = 0; i < this.availableProjectiles.length; i++ ) {
-        console.log(this.availableProjectiles[i].name);
         if (this.availableProjectiles[i].name === type) {
           this.activeProjectile = this.availableProjectiles[i];
         }

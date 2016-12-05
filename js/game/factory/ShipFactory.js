@@ -130,7 +130,6 @@ function ShipFactory() {
     };
 
     this.fire = function() {
-      console.log(this.weaponsSystem.fire(this.getCurrentX(), this.getCurrentY()));
       return this.weaponsSystem.fire(this.getCurrentX(), this.getCurrentY());
     };
 

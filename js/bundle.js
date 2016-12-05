@@ -69,7 +69,6 @@
 	  $("#reset").click(function() {
 	    game.noOfEnemies = $("#number-enemies").val();
 	    game.enemyAttackFrequency = $("#attack-speed").val();
-	    console.log(game.noOfEnemies);
 	    game.reset();
 	  });
 
@@ -353,7 +352,6 @@
 	    for (var i = 0; i < this.projectiles.length; i++) {
 	      var projectile = this.projectiles[i];
 	      if (projectile.isFriendly) {
-	        console.log("friendly projectile");
 	        this._handleEnemyCollision(stage, projectile);
 	      } else if (this.player1.collidesWithCoordinates(projectile.getCurrentX(), projectile.getCurrentY())) {
 	        this._handleCollision(projectile, this.player1, stage);
@@ -600,7 +598,6 @@
 	    };
 
 	    this.fire = function() {
-	      console.log(this.weaponsSystem.fire(this.getCurrentX(), this.getCurrentY()));
 	      return this.weaponsSystem.fire(this.getCurrentX(), this.getCurrentY());
 	    };
 
@@ -707,11 +704,7 @@
 	    this.fire = function(x, y) {
 	      var shell = [];
 	      for (var i = 0; i < this.projectileCount; i++) {
-	        // console.log(this.projectileCount);
-	        // console.log(this.gunModes);
 	        var n = this.gunModes[this.projectileCount - 1][i];
-	        console.log(n);
-	        console.log(this.guns);
 	        this.guns[n].load(this.activeProjectile);
 	        shell.push(this.guns[n].fire(x, y));
 	      }
@@ -719,10 +712,7 @@
 	    };
 
 	    this.switchWeapon = function(type) {
-	      console.log("SWITCH WEAPON");
-	      console.log(type);
 	      for (var i = 0; i < this.availableProjectiles.length; i++ ) {
-	        console.log(this.availableProjectiles[i].name);
 	        if (this.availableProjectiles[i].name === type) {
 	          this.activeProjectile = this.availableProjectiles[i];
 	        }

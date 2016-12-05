@@ -23,7 +23,6 @@ $( document ).ready(function() {
   $("#reset").click(function() {
     game.noOfEnemies = $("#number-enemies").val();
     game.enemyAttackFrequency = $("#attack-speed").val();
-    console.log(game.noOfEnemies);
     game.reset();
   });
 
