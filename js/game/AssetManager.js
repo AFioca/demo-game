@@ -29,9 +29,7 @@ function AssetManager() {
   };
 
   this.firePlayer1 = function() {
-    var laser = this.player1.fire();
-    this.projectiles.push(laser);
-    this.stage.addChild(laser.getSelf());
+    this._addProjectiles(this.player1.fire(), true);
   };
 
   this.updateAssets = function() {
@@ -171,10 +169,15 @@ function AssetManager() {
   this._fireEnemyShip = function(stage) {
     if (this.enemyShips.length > 0) {
       var randomIndex = NumberUtility.getRandomNumberBetween(this.enemyShips.length - 1, 0);
-      var projectile = this.enemyShips[randomIndex].fire();
-      projectile.isFriendly = false;
-      this.projectiles.push(projectile);
-      stage.addChild(projectile.getSelf());
+      this._addProjectiles(this.enemyShips[randomIndex].fire(), false);
+    }
+  };
+
+  this._addProjectiles = function(newProjectiles, isFriendly) {
+    for (var i = 0; i < newProjectiles.length; i++) {
+      this.projectiles.push(newProjectiles[i]);
+      newProjectiles[i].isFriendly = isFriendly;
+      this.stage.addChild(newProjectiles[i].getSelf());
     }
   };
 

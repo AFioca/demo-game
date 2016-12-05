@@ -39,6 +39,14 @@ function Game() {
     this.assetManager.player1.switchWeapon(type);
   };
 
+  this.upgradeWeaponsSystem = function() {
+    this.assetManager.player1.weaponsSystem.upgrade();
+  };
+
+  this.getProjectileCount = function() {
+    return this.assetManager.player1.weaponsSystem.projectileCount;
+  };
+
   this.reset = function() {
     this.isPaused = true;
     this.stage.clear();

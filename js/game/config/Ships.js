@@ -4,7 +4,13 @@ var Ships = {
   PLAYER: {
     health: 100,
     speed: 5,
-    availableProjectiles: [Projectiles.LASER, Projectiles.PLASMA, Projectiles.LIGHT],
+    weaponsSystem: {
+      availableProjectiles: [Projectiles.LASER, Projectiles.PLASMA, Projectiles.LIGHT],
+      gunLocations: [{x: 0, y:-50 },
+                     {x: -30, y:-10 },
+                     {x: 30, y:-10 }],
+      gunModes: [ [0], [1, 2], [0, 1, 2] ]// in relation to the center being 0,0
+    },
     spriteSheet: new createjs.SpriteSheet({
       images: ["/demo-game/img/ship2.png"],
       frames: {width:100, height:100, regX: 50, regY: 50},
@@ -25,7 +31,11 @@ var Ships = {
   DRONE: {
     health: 100,
     speed: 3,
-    availableProjectiles: [Projectiles.LASER],
+    weaponsSystem: {
+      availableProjectiles: [Projectiles.LASER],
+      gunLocations: [ {x: 0, y:50 }],
+      gunModes: [ [0] ]
+    },
     spriteSheet: new createjs.SpriteSheet({
       images: ["/demo-game/img/enemy-spaceship.png"],
       frames: {width:100, height:100, regX: 50, regY: 50},

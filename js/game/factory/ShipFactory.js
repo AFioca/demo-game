@@ -17,7 +17,7 @@ function ShipFactory() {
     this.health = config.health;
     this.speed = config.speed;
     this.navigationSystem = NavigationSystem.create();
-    this.weaponsSystem = WeaponsSystem.create(config.availableProjectiles);
+    this.weaponsSystem = WeaponsSystem.create(config.weaponsSystem);
 
     this.spriteSheet = config.sprite;
     this.sprite = new createjs.Sprite(config.spriteSheet, "default");
@@ -130,7 +130,8 @@ function ShipFactory() {
     };
 
     this.fire = function() {
-      return this.weaponsSystem.fire(this.getCurrentX(), this.getCurrentY() - this.heightModifier);
+      console.log(this.weaponsSystem.fire(this.getCurrentX(), this.getCurrentY()));
+      return this.weaponsSystem.fire(this.getCurrentX(), this.getCurrentY());
     };
 
     this.switchWeapon = function(type) {

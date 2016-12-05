@@ -77,6 +77,12 @@
 	    game.switchProjectile(this.value);
 	  });
 
+	  $("#upgrade").click(function() {
+	    game.upgradeWeaponsSystem();
+	    $("#projectile-count").text(game.getProjectileCount());
+	  });
+
+	  // CONTROLS
 	  $( document ).keydown(function(event) {
 
 	    switch (event.keyCode) {
@@ -156,6 +162,14 @@
 	    this.assetManager.player1.switchWeapon(type);
 	  };
 
+	  this.upgradeWeaponsSystem = function() {
+	    this.assetManager.player1.weaponsSystem.upgrade();
+	  };
+
+	  this.getProjectileCount = function() {
+	    return this.assetManager.player1.weaponsSystem.projectileCount;
+	  };
+
 	  this.reset = function() {
 	    this.isPaused = true;
 	    this.stage.clear();
@@ -214,7 +228,7 @@
 
 	var NumberUtility = __webpack_require__(3);
 	var ShipFactory = __webpack_require__(4);
-	var TrafficController = __webpack_require__(9);
+	var TrafficController = __webpack_require__(12);
 
 	function AssetManager() {
 
@@ -243,9 +257,7 @@
 	  };
 
 	  this.firePlayer1 = function() {
-	    var laser = this.player1.fire();
-	    this.projectiles.push(laser);
-	    this.stage.addChild(laser.getSelf());
+	    this._addProjectiles(this.player1.fire(), true);
 	  };
 
 	  this.updateAssets = function() {
@@ -385,10 +397,15 @@
 	  this._fireEnemyShip = function(stage) {
 	    if (this.enemyShips.length > 0) {
 	      var randomIndex = NumberUtility.getRandomNumberBetween(this.enemyShips.length - 1, 0);
-	      var projectile = this.enemyShips[randomIndex].fire();
-	      projectile.isFriendly = false;
-	      this.projectiles.push(projectile);
-	      stage.addChild(projectile.getSelf());
+	      this._addProjectiles(this.enemyShips[randomIndex].fire(), false);
+	    }
+	  };
+
+	  this._addProjectiles = function(newProjectiles, isFriendly) {
+	    for (var i = 0; i < newProjectiles.length; i++) {
+	      this.projectiles.push(newProjectiles[i]);
+	      newProjectiles[i].isFriendly = isFriendly;
+	      this.stage.addChild(newProjectiles[i].getSelf());
 	    }
 	  };
 
@@ -470,7 +487,7 @@
 	    this.health = config.health;
 	    this.speed = config.speed;
 	    this.navigationSystem = NavigationSystem.create();
-	    this.weaponsSystem = WeaponsSystem.create(config.availableProjectiles);
+	    this.weaponsSystem = WeaponsSystem.create(config.weaponsSystem);
 
 	    this.spriteSheet = config.sprite;
 	    this.sprite = new createjs.Sprite(config.spriteSheet, "default");
@@ -583,7 +600,8 @@
 	    };
 
 	    this.fire = function() {
-	      return this.weaponsSystem.fire(this.getCurrentX(), this.getCurrentY() - this.heightModifier);
+	      console.log(this.weaponsSystem.fire(this.getCurrentX(), this.getCurrentY()));
+	      return this.weaponsSystem.fire(this.getCurrentX(), this.getCurrentY());
 	    };
 
 	    this.switchWeapon = function(type) {
@@ -656,27 +674,57 @@
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var ProjectileFactory = __webpack_require__(7);
+	var GunFactory = __webpack_require__(7);
 
 	function WeaponsSystemFactory() {
-	  this.create = function(availableProjectiles) {
-	    return new this.WeaponsSystem(availableProjectiles);
+	  this.create = function(config) {
+	    var weaponsSystem = new this.WeaponsSystem(config);
+	    weaponsSystem.init(config.gunLocations);
+	    return weaponsSystem;
 	  };
 
-	  this.WeaponsSystem = function(availableProjectiles) {
-	    this.availableProjectiles = availableProjectiles;
-	    this.activeProjectile = availableProjectiles[0];
+	  this.WeaponsSystem = function(config) {
+	    this.guns = [];
+	    this.gunModes = config.gunModes;
+	    this.availableProjectiles = config.availableProjectiles;
+	    this.activeProjectile = config.availableProjectiles[0];
+	    this.projectileMax = config.gunLocations.length;
+	    this.projectileCount = 1;
+
+	    this.init = function(gunLocations) {
+	      for (var i = 0; i < this.gunModes.length; i++) {
+	        this.guns.push(GunFactory.create(gunLocations[i].x,
+	                                         gunLocations[i].y,
+	                                         this.activeProjectile));
+	      }
+	    };
+
+	    this.upgrade = function() {
+	      if (this.projectileCount < this.projectileMax)
+	        this.projectileCount = this.projectileCount + 1;
+	    };
 
 	    this.fire = function(x, y) {
-	      var projectile = ProjectileFactory.createProjectile(this.activeProjectile, x, y);
-	      projectile.draw();
-	      return projectile;
+	      var shell = [];
+	      for (var i = 0; i < this.projectileCount; i++) {
+	        // console.log(this.projectileCount);
+	        // console.log(this.gunModes);
+	        var n = this.gunModes[this.projectileCount - 1][i];
+	        console.log(n);
+	        console.log(this.guns);
+	        this.guns[n].load(this.activeProjectile);
+	        shell.push(this.guns[n].fire(x, y));
+	      }
+	      return shell;
 	    };
 
 	    this.switchWeapon = function(type) {
+	      console.log("SWITCH WEAPON");
+	      console.log(type);
 	      for (var i = 0; i < this.availableProjectiles.length; i++ ) {
+	        console.log(this.availableProjectiles[i].name);
 	        if (this.availableProjectiles[i].name === type) {
-	          this.activeProjectile = availableProjectiles[i];
+	          this.activeProjectile = this.availableProjectiles[i];
 	        }
 	      }
 
@@ -695,7 +743,39 @@
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var ExplosionFactory = __webpack_require__(8);
+	var ProjectileFactory = __webpack_require__(8);
+
+	function GunFactory() {
+
+	  this.create = function(x, y, projectile) {
+	    return new this.Gun(x, y, projectile);
+	  };
+
+	  this.Gun = function(x, y, projectile) {
+	    this.x = x;
+	    this.y = y;
+	    this.projectile = projectile;
+
+	    this.load = function(projectile) {
+	      this.projectile = projectile;
+	    };
+
+	    this.fire = function(x, y) {
+	      var projectile = ProjectileFactory.createProjectile(this.projectile, (x + this.x) , (y + this.y));
+	      projectile.draw();
+	      return projectile;
+	    };
+	  };
+	}
+
+	module.exports = new GunFactory();
+
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var ExplosionFactory = __webpack_require__(9);
 
 	function ProjectileFactory() {
 
@@ -767,7 +847,7 @@
 
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports) {
 
 	function ExplosionFactory() {
@@ -812,86 +892,6 @@
 
 
 /***/ },
-/* 9 */
-/***/ function(module, exports) {
-
-	
-	function TrafficController() {
-
-	  this.pathIsClear = function(ship, ships, projectiles, height, width) {
-	    return !(this._willCollideWithBorder(ship, height, width) ||
-	             this._willCollideWithShips(ship, ships) ||
-	             this._willCollideWithProjectiles(ship, projectiles));
-	  };
-
-	  this._willCollideWithProjectiles = function(ship, projectiles) {
-	    var direction = ship.getDirection();
-	    var willCollide = false;
-	    for (var n = 0; n < projectiles.length; n++) {
-	      if (direction === "right" && ship.collidesWithCoordinates(projectiles[n].getCurrentX() - 1)) {
-	        willCollide = true;
-	      } else if (direction === "left" && ship.collidesWithCoordinates(projectiles[n].getCurrentX() + 1)) {
-	        willCollide = true;
-	      } else if (direction === "up" && ship.collidesWithCoordinates(projectiles[n].getCurrentY() + 1)) {
-	        willCollide = true;
-	      } else if (direction === "down" && ship.collidesWithCoordinates(projectiles[n].getCurrentY() - 1)) {
-	        willCollide = true;
-	      }
-	    }
-	    return willCollide;
-	  };
-
-	  this._willCollideWithBorder = function(ship, height, width) {
-	    var direction = ship.getDirection();
-	    var willCollide = false;
-	    if (direction === "right" && (ship.getRightBoundry() + 1) > width) {
-	      willCollide = true;
-	    } else if (direction === "left" && (ship.getLeftBoundry() - 1) < 0) {
-	      willCollide = true;
-	    } else if (direction === "up" && (ship.getTopBoundry() - 1) < 0) {
-	      willCollide = true;
-	    } else if (direction === "down" && (ship.getTopBoundry() + 1) > height) {
-	      willCollide = true;
-	    }
-	    return willCollide;
-	  };
-
-	  this._willCollideWithShips = function(ship, ships) {
-	    // I'm sure there's a cleaner way, but this works so I'm leaving it for now.
-	    var direction = ship.getDirection();
-	    var willCollide = false;
-	    for (var n = 0; n < ships.length; n++) {
-	      if (direction === "right" && (
-	          ships[n].collidesWithCoordinates(ship.getRightBoundry() + 1, ship.getCurrentY()) ||
-	          ships[n].collidesWithCoordinates(ship.getRightBoundry() + 1, ship.getTopBoundry()) ||
-	          ships[n].collidesWithCoordinates(ship.getRightBoundry() + 1, ship.getBottomBoundry()))) {
-	        willCollide = true;
-	      } else if (direction === "left" && (
-	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry() - 1, ship.getCurrentY()) ||
-	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry() - 1, ship.getTopBoundry()) ||
-	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry() - 1, ship.getBottomBoundry()))) {
-	        willCollide = true;
-	      } else if (direction === "up" && (
-	                 ships[n].collidesWithCoordinates(ship.getCurrentX(), ship.getTopBoundry() - 1) ||
-	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry(), ship.getTopBoundry() - 1) ||
-	                 ships[n].collidesWithCoordinates(ship.getRightBoundry(), ship.getTopBoundry() - 1))) {
-	        willCollide = true;
-	      } else if (direction === "down" && (
-	                 ships[n].collidesWithCoordinates(ship.getCurrentX(), ship.getBottomBoundry() + 1) ||
-	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry(), ship.getBottomBoundry() + 1) ||
-	                 ships[n].collidesWithCoordinates(ship.getRightBoundry(), ship.getBottomBoundry() + 1))) {
-	        willCollide = true;
-	      }
-	    }
-	    return willCollide;
-	  };
-	}
-
-	var trafficController = new TrafficController();
-	module.exports = trafficController;
-
-
-/***/ },
 /* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -901,7 +901,13 @@
 	  PLAYER: {
 	    health: 100,
 	    speed: 5,
-	    availableProjectiles: [Projectiles.LASER, Projectiles.PLASMA, Projectiles.LIGHT],
+	    weaponsSystem: {
+	      availableProjectiles: [Projectiles.LASER, Projectiles.PLASMA, Projectiles.LIGHT],
+	      gunLocations: [{x: 0, y:-50 },
+	                     {x: -30, y:-10 },
+	                     {x: 30, y:-10 }],
+	      gunModes: [ [0], [1, 2], [0, 1, 2] ]// in relation to the center being 0,0
+	    },
 	    spriteSheet: new createjs.SpriteSheet({
 	      images: ["/demo-game/img/ship2.png"],
 	      frames: {width:100, height:100, regX: 50, regY: 50},
@@ -922,7 +928,11 @@
 	  DRONE: {
 	    health: 100,
 	    speed: 3,
-	    availableProjectiles: [Projectiles.LASER],
+	    weaponsSystem: {
+	      availableProjectiles: [Projectiles.LASER],
+	      gunLocations: [ {x: 0, y:50 }],
+	      gunModes: [ [0] ]
+	    },
 	    spriteSheet: new createjs.SpriteSheet({
 	      images: ["/demo-game/img/enemy-spaceship.png"],
 	      frames: {width:100, height:100, regX: 50, regY: 50},
@@ -1005,6 +1015,86 @@
 	};
 
 	module.exports = Projectiles;
+
+
+/***/ },
+/* 12 */
+/***/ function(module, exports) {
+
+	
+	function TrafficController() {
+
+	  this.pathIsClear = function(ship, ships, projectiles, height, width) {
+	    return !(this._willCollideWithBorder(ship, height, width) ||
+	             this._willCollideWithShips(ship, ships) ||
+	             this._willCollideWithProjectiles(ship, projectiles));
+	  };
+
+	  this._willCollideWithProjectiles = function(ship, projectiles) {
+	    var direction = ship.getDirection();
+	    var willCollide = false;
+	    for (var n = 0; n < projectiles.length; n++) {
+	      if (direction === "right" && ship.collidesWithCoordinates(projectiles[n].getCurrentX() - 1)) {
+	        willCollide = true;
+	      } else if (direction === "left" && ship.collidesWithCoordinates(projectiles[n].getCurrentX() + 1)) {
+	        willCollide = true;
+	      } else if (direction === "up" && ship.collidesWithCoordinates(projectiles[n].getCurrentY() + 1)) {
+	        willCollide = true;
+	      } else if (direction === "down" && ship.collidesWithCoordinates(projectiles[n].getCurrentY() - 1)) {
+	        willCollide = true;
+	      }
+	    }
+	    return willCollide;
+	  };
+
+	  this._willCollideWithBorder = function(ship, height, width) {
+	    var direction = ship.getDirection();
+	    var willCollide = false;
+	    if (direction === "right" && (ship.getRightBoundry() + 1) > width) {
+	      willCollide = true;
+	    } else if (direction === "left" && (ship.getLeftBoundry() - 1) < 0) {
+	      willCollide = true;
+	    } else if (direction === "up" && (ship.getTopBoundry() - 1) < 0) {
+	      willCollide = true;
+	    } else if (direction === "down" && (ship.getTopBoundry() + 1) > height) {
+	      willCollide = true;
+	    }
+	    return willCollide;
+	  };
+
+	  this._willCollideWithShips = function(ship, ships) {
+	    // I'm sure there's a cleaner way, but this works so I'm leaving it for now.
+	    var direction = ship.getDirection();
+	    var willCollide = false;
+	    for (var n = 0; n < ships.length; n++) {
+	      if (direction === "right" && (
+	          ships[n].collidesWithCoordinates(ship.getRightBoundry() + 1, ship.getCurrentY()) ||
+	          ships[n].collidesWithCoordinates(ship.getRightBoundry() + 1, ship.getTopBoundry()) ||
+	          ships[n].collidesWithCoordinates(ship.getRightBoundry() + 1, ship.getBottomBoundry()))) {
+	        willCollide = true;
+	      } else if (direction === "left" && (
+	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry() - 1, ship.getCurrentY()) ||
+	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry() - 1, ship.getTopBoundry()) ||
+	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry() - 1, ship.getBottomBoundry()))) {
+	        willCollide = true;
+	      } else if (direction === "up" && (
+	                 ships[n].collidesWithCoordinates(ship.getCurrentX(), ship.getTopBoundry() - 1) ||
+	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry(), ship.getTopBoundry() - 1) ||
+	                 ships[n].collidesWithCoordinates(ship.getRightBoundry(), ship.getTopBoundry() - 1))) {
+	        willCollide = true;
+	      } else if (direction === "down" && (
+	                 ships[n].collidesWithCoordinates(ship.getCurrentX(), ship.getBottomBoundry() + 1) ||
+	                 ships[n].collidesWithCoordinates(ship.getLeftBoundry(), ship.getBottomBoundry() + 1) ||
+	                 ships[n].collidesWithCoordinates(ship.getRightBoundry(), ship.getBottomBoundry() + 1))) {
+	        willCollide = true;
+	      }
+	    }
+	    return willCollide;
+	  };
+	}
+
+	var trafficController = new TrafficController();
+	module.exports = trafficController;
 
 
 /***/ }

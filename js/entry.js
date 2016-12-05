@@ -31,6 +31,12 @@ $( document ).ready(function() {
     game.switchProjectile(this.value);
   });
 
+  $("#upgrade").click(function() {
+    game.upgradeWeaponsSystem();
+    $("#projectile-count").text(game.getProjectileCount());
+  });
+
+  // CONTROLS
   $( document ).keydown(function(event) {
 
     switch (event.keyCode) {
