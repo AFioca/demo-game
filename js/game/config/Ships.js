@@ -9,7 +9,7 @@ var Ships = {
       gunLocations: [{x: 0, y:-50 },
                      {x: -30, y:-10 },
                      {x: 30, y:-10 }],
-      gunModes: [ [0], [1, 2], [0, 1, 2] ]// in relation to the center being 0,0
+      gunModes: [ [0], [1, 2], [0, 1, 2] ]
     },
     spriteSheet: new createjs.SpriteSheet({
       images: ["/demo-game/img/ship2.png"],

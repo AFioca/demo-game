@@ -38,7 +38,6 @@ function ProjectileFactory() {
     };
 
     this.getTopBoundry = function() {
-      // PLUS OR MINUS?
       return (this.shape.y - this.getHeightModifier);
     };
 
