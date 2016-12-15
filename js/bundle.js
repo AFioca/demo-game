@@ -235,8 +235,8 @@
 	  this.height = null;
 	  this.width = null;
 
-	  this.backgroundImage1 = new createjs.Bitmap("/demo-game/img/space-background.png");
-	  this.backgroundImage2 = new createjs.Bitmap("/demo-game/img/space-background.png");
+	  this.backgroundImage1 = new createjs.Bitmap("/space-shooter/img/space-background.png");
+	  this.backgroundImage2 = new createjs.Bitmap("/space-shooter/img/space-background.png");
 
 	  this.player1 = ShipFactory.createPlayerShip();
 	  this.projectiles = [];
@@ -805,7 +805,6 @@
 	    };
 
 	    this.getTopBoundry = function() {
-	      // PLUS OR MINUS?
 	      return (this.shape.y - this.getHeightModifier);
 	    };
 
@@ -896,10 +895,10 @@
 	      gunLocations: [{x: 0, y:-50 },
 	                     {x: -30, y:-10 },
 	                     {x: 30, y:-10 }],
-	      gunModes: [ [0], [1, 2], [0, 1, 2] ]// in relation to the center being 0,0
+	      gunModes: [ [0], [1, 2], [0, 1, 2] ]
 	    },
 	    spriteSheet: new createjs.SpriteSheet({
-	      images: ["/demo-game/img/ship2.png"],
+	      images: ["/space-shooter/img/ship2.png"],
 	      frames: {width:100, height:100, regX: 50, regY: 50},
 	      animations: {
 	        default: {
@@ -924,7 +923,7 @@
 	      gunModes: [ [0] ]
 	    },
 	    spriteSheet: new createjs.SpriteSheet({
-	      images: ["/demo-game/img/enemy-spaceship.png"],
+	      images: ["/space-shooter/img/enemy-spaceship.png"],
 	      frames: {width:100, height:100, regX: 50, regY: 50},
 	      animations: {
 	        default: {

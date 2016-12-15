@@ -12,7 +12,7 @@ var Ships = {
       gunModes: [ [0], [1, 2], [0, 1, 2] ]
     },
     spriteSheet: new createjs.SpriteSheet({
-      images: ["/demo-game/img/ship2.png"],
+      images: ["/space-shooter/img/ship2.png"],
       frames: {width:100, height:100, regX: 50, regY: 50},
       animations: {
         default: {
@@ -37,7 +37,7 @@ var Ships = {
       gunModes: [ [0] ]
     },
     spriteSheet: new createjs.SpriteSheet({
-      images: ["/demo-game/img/enemy-spaceship.png"],
+      images: ["/space-shooter/img/enemy-spaceship.png"],
       frames: {width:100, height:100, regX: 50, regY: 50},
       animations: {
         default: {

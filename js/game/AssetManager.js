@@ -8,8 +8,8 @@ function AssetManager() {
   this.height = null;
   this.width = null;
 
-  this.backgroundImage1 = new createjs.Bitmap("/demo-game/img/space-background.png");
-  this.backgroundImage2 = new createjs.Bitmap("/demo-game/img/space-background.png");
+  this.backgroundImage1 = new createjs.Bitmap("/space-shooter/img/space-background.png");
+  this.backgroundImage2 = new createjs.Bitmap("/space-shooter/img/space-background.png");
 
   this.player1 = ShipFactory.createPlayerShip();
   this.projectiles = [];
